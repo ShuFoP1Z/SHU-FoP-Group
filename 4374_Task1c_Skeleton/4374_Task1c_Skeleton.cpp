@@ -57,7 +57,7 @@ int main()
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes,vector<Zombie> zombies, int k, int& lives, string& mess);
+	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes,vector<Zombie>& zombies, int k, int& lives, string& mess);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
 	void endProgram(int lives);
 
@@ -95,14 +95,14 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes,vector<Zombie> zombies,int key, int& lives, string& message)
+void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes,vector<Zombie>& zombies,int key, int& lives, string& message)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, int& lives, string& mess);
 	void updateZombieCoordinates(const char g[][SIZEX], vector<Zombie>& zombies, Item spot, int& lives, string& message);
 	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes, vector<Zombie> zombies);
 
 	updateSpotCoordinates(grid, spot, key, lives, message);	//update according to key
-	updateZombieCoordinates(grid, zombies,spot, lives, message);
+	updateZombieCoordinates(grid, zombies,spot, lives, message);	//update the zombie position based on spots location
 	updateGrid(grid, spot, holes, zombies);							//update grid information
 }
 
@@ -246,6 +246,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 	{//...depending on what's on the target position in grid...
 	case HOLE:								//can move
 		--lives;
+		break;
 	case TUNNEL:
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
@@ -258,24 +259,42 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 } //end of updateSpotCoordinates
 void updateZombieCoordinates(const char g[][SIZEX], vector<Zombie>& zombies, Item spot, int& lives, string& message)
 {
-	int isLocationFree(int x, int y);
+	// int isLocationFree(int x, int y); ~~~~POSSIBLY NOT NEEDED~~~~
 	int dx(0), dy(0); //The maximum amount the player can move by
 	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
-	
- 	for (int i = 0; i < zombies.size(); ++i)
+
+	for (int i = 0; i < zombies.size(); ++i)
 	{
-		displaceX = spot.x - zombies.at(i).x; 
-		displaceY = spot.y - zombies.at(i).y;
+		displaceX = (spot.x - zombies.at(i).x);
+		displaceY = (spot.y - zombies.at(i).y);
+		
 		if (displaceX < 0)
 			dx = -1;
-		else
+		else if (displaceX < 0)
 			dx = 1;
+		else
+			dx = 0;
 		if (displaceY < 0)
 			dy = -1;
+		else if (displaceY > 0)
+			dy = 1;
 		else
-			dy = + 1;
+			dy = 0;
+
+		const int targetX(zombies.at(i).x + dx);
+		const int targetY(zombies.at(i).y + dy);
+
+		switch (g[targetY][targetX])
+		{
+		case TUNNEL:
+			zombies[i].x += dx; 
+			zombies[i].y += dy;
+			break;
 		
+		}
 	}
+
+	
 }//end of updateZombieCoordinates
 //---------------------------------------------------------------------------
 //----- process key
@@ -319,7 +338,7 @@ bool isArrowKey(int key)
 
 bool wantToQuit(int key)
 { //check if the key pressed is 'Q'
-	return (key == QUIT);
+	return (toupper(key) == QUIT);
 } //end of wantToQuit
 
 bool outOfLives(int lives)
