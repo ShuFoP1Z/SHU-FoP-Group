@@ -128,7 +128,7 @@ void setSpotInitialCoordinates(Item& spot)
 
 void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 { //set hole coordinates inside the grid at random at beginning of game
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < holes.size(); ++i)
 	{
 		holes[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		holes[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
@@ -162,7 +162,7 @@ void placeSpot(char gr[][SIZEX], Item spot)
 
 void placeHoles(char gr[][SIZEX], vector<Item> holes)
 { //place holes at their new positions in grid
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < holes.size(); ++i)
 		gr[holes[i].y][holes[i].x] = holes[i].symbol;
 } //end of placeHoles
 
