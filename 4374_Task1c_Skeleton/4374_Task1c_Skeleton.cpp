@@ -259,7 +259,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 } //end of updateSpotCoordinates
 void updateZombieCoordinates(const char g[][SIZEX], vector<Zombie>& zombies, Item spot, int& lives, string& message)
 {
-	// int isLocationFree(int x, int y); ~~~~POSSIBLY NOT NEEDED~~~~
+	void resetZombiePosition(vector<Zombie>& zombies, int arrayIndex);
 	int dx(0), dy(0); //The maximum amount the player can move by
 	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
 
@@ -268,18 +268,18 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Zombie>& zombies, Ite
 		displaceX = (spot.x - zombies.at(i).x);
 		displaceY = (spot.y - zombies.at(i).y);
 		
-		if (displaceX < 0)
-			dx = -1;
-		else if (displaceX < 0)
-			dx = 1;
+		if (displaceX != 0  && displaceY != 0)
+		{
+			dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
+			dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
+		}
 		else
-			dx = 0;
-		if (displaceY < 0)
-			dy = -1;
-		else if (displaceY > 0)
-			dy = 1;
-		else
-			dy = 0;
+		{
+			if (displaceX == 0)
+				dx = 0;
+			if (displaceY == 0)
+				dy = 0;
+		}
 
 		const int targetX(zombies.at(i).x + dx);
 		const int targetY(zombies.at(i).y + dy);
@@ -289,13 +289,45 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Zombie>& zombies, Ite
 		case TUNNEL:
 			zombies[i].x += dx; 
 			zombies[i].y += dy;
+			break; 
+		case WALL: 
 			break;
-		
+		case HOLE: 
+			resetZombiePosition(zombies, i);
+			break;
+		case ZOMBIE:
+			break;
+		case SPOT:
+			--lives; 
+			resetZombiePosition(zombies, i);
+			break;
 		}
 	}
 
 	
 }//end of updateZombieCoordinates
+void resetZombiePosition(vector<Zombie>& zombies, int arrayIndex) 
+{
+	switch (arrayIndex)
+	{
+	case 0:
+		zombies.at(arrayIndex).x = 1;
+		zombies.at(arrayIndex).y = 1;
+		break;
+	case 1:
+		zombies.at(arrayIndex).x = (SIZEX - 2);
+		zombies.at(arrayIndex).y = 1;
+		break;
+	case 2:
+		zombies.at(arrayIndex).x = 1;
+		zombies.at(arrayIndex).y = (SIZEY - 2);
+		break;
+	case 3:
+		zombies.at(arrayIndex).x = (SIZEX - 2);
+		zombies.at(arrayIndex).y = (SIZEY - 2);
+		break;
+	}
+}//end of resetZombiePosition
 //---------------------------------------------------------------------------
 //----- process key
 //---------------------------------------------------------------------------
@@ -403,7 +435,7 @@ void showTitle()
 	SelectBackColour(clWhite);
 	SelectTextColour(clRed);
 	Gotoxy(40, 0);
-	cout << "Ashley Swanson, Masimba Walker, Kris Taylor - 1Z : March 15";
+	cout << "Ashley Swanson, Masimba Walker, Kris Taylor - 1Z : March 25th";
 } //end of showTitle
 
 
