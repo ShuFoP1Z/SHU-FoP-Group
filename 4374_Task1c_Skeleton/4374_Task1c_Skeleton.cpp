@@ -25,6 +25,7 @@ const char SPOT('@');						//spot
 const char TUNNEL(' ');						//open space
 const char WALL('#');						//border
 const char HOLE('O');						//hole
+const char PILL('*');						//pill
 //defining the command letters to move spot on the maze
 const int  UP(72);							//up arrow
 const int  DOWN(80);						//down arrow
@@ -36,8 +37,15 @@ const char QUIT('Q');						//end the game
 //data structure to store data for a grid item
 struct Item
 {
-	const char symbol;						//symbol on grid
+	char symbol;						//symbol on grid
 	int x, y;								//coordinates
+};
+
+struct ChangingItem
+{
+	const char symbol;
+	int x, y;
+	bool isBeingRendered;
 };
 
 //---------------------------------------------------------------------------
@@ -47,34 +55,38 @@ struct Item
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes);
+	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills);
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
+	bool outOfPills(int pillsRemaining);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess);
+	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
-	void endProgram(int lives);
+	void endProgram(int lives, int key, int pillsRemaining);
 
 	//local variable declarations 
 	char grid[SIZEY][SIZEX];								//grid for display
 	int lives(3);											//The number of lives spot has
+	int pillsRemaining(5);									//The number of pills still being shown
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
+	ChangingItem pill = { PILL };									//Pill's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
+	vector <ChangingItem> pills(5, pill);							//Creates a vector of pills, with each element being initialised as pills
 	string message("LET'S START...      ");					//current message to player
 
 	bool running = true;
 
 	//action...
-	initialiseGame(grid, spot, holes);						//initialise grid (incl. walls and spot)
+	initialiseGame(grid, spot, holes, pills);						//initialise grid (incl. walls and spot)
 	int key(' ');											//create key to store keyboard events
 	do {
 		renderGame(grid, message, lives);					//render game state on screen
 		message = "                    ";					//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, holes, key, lives, message);
+			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining);
 		else
 			message = "INVALID KEY!        ";				//set 'Invalid key' message
 
@@ -82,32 +94,36 @@ int main()
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
 			running = false;
+		if (outOfPills(pillsRemaining))
+			running = false;
 	} while (running);
 
-	endProgram(lives);										//display final message
+	endProgram(lives, key, pillsRemaining);										//display final message
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message)
+void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<ChangingItem>& pills, int& pillsRemaining)
 { //updateGame state
-	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, int& lives, string& mess);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes);
+	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills);
 
-	updateSpotCoordinates(grid, spot, key, lives, message);	//update according to key
-	updateGrid(grid, spot, holes);							//update grid information
+	updateSpotCoordinates(grid, spot, key, lives, message, pills, pillsRemaining);	//update according to key
+	updateGrid(grid, spot, holes, pills);							//update grid information
 }
 
 //---------------------------------------------------------------------------
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes)
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
 	void setHoleInitialCoordinates(vector<Item>& holes, Item& spot);
+	void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<ChangingItem>& pills);
 	void placeSpot(char gr[][SIZEX], Item spot);
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
+	void placePills(char gr[][SIZEX], vector<ChangingItem> pills);
 
 	Seed();													//seed random number generator
 
@@ -117,6 +133,8 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes)
 	placeSpot(grid, spot);									//set spot in grid
 	setHoleInitialCoordinates(holes, spot);					//intiialise holes position
 	placeHoles(grid, holes);								//set holes in grid
+	setPillsInitialCoordinates(holes, spot, pills);			//initialise pills position
+	placePills(grid, pills);								//set pills in grid
 
 } //end of initialiseGame
 
@@ -137,6 +155,23 @@ void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 			--i;											//then decrement i so the hole is moved somewhere else
 	}
 } //end of setHoleInitialCoordinates
+
+void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<ChangingItem>& pills)
+{ //set the pills coordinates inside the grid randomly at the beginning of a game, checking theyre not on a taken space)
+	for (int i = 0; i < 5; ++i)
+	{
+		pills[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
+		pills[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
+		pills[i].isBeingRendered = true;					//set to draw the pill
+
+		if (pills[i].y == spot.y && pills[i].x == spot.x)	//if a pill is in the same place as spot
+			--i;											//then decrement i so the pill is moved somewhere else
+
+		for (int c = 0; c < 12; ++c)						//for every hole
+			if (pills[i].y == holes[c].y && pills[i].x == holes[c].x)	//check if the new pill will be in the same space as a hole
+			--i;											//if it is remove that pill to create a new one
+	}
+} //end of setPillsInitialCoordinates
 
 void setGrid(char grid[][SIZEX])
 { //reset the empty grid configuration
@@ -166,27 +201,37 @@ void placeHoles(char gr[][SIZEX], vector<Item> holes)
 		gr[holes[i].y][holes[i].x] = holes[i].symbol;
 } //end of placeHoles
 
+void placePills(char gr[][SIZEX], vector<ChangingItem> pills)
+{ //place pills at their new positions in grid
+	for (int i = 0; i < pills.size(); ++i)					//for every pill
+		if (pills[i].isBeingRendered == true)				//check to see if that pill has already been eaten
+			gr[pills[i].y][pills[i].x] = pills[i].symbol;	//if it hasn't, place that pill in the grid
+} //end of placePills
+
 //---------------------------------------------------------------------------
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 	void placeHoles(char g[][SIZEX], vector<Item> holes);
+	void placePills(char g[][SIZEX], vector<ChangingItem> pills);
 
 	setGrid(grid);							//reset empty grid
 	placeHoles(grid, holes);				//set holes in grid
+	placePills(grid, pills);				//set pills in grid
 	placeSpot(grid, spot);					//set spot in grid
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives, string& mess)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
+	void removePill(vector<ChangingItem>& pills, Item sp, string& message, int& pillsRemaining);
 
 	//calculate direction of movement required by key - if any
 	int dx(0), dy(0);
@@ -197,6 +242,12 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 	const int targetX(sp.x + dx);
 	switch (g[targetY][targetX])
 	{//...depending on what's on the target position in grid...
+	case PILL:
+		sp.y += dy;							//go in that Y direction
+		sp.x += dx;							//go in that X direction
+		++lives;							//add a life
+		removePill(pills, sp, mess, pillsRemaining);		//remove the pill
+		break;
 	case HOLE:								//can move
 		--lives;
 	case TUNNEL:
@@ -252,7 +303,7 @@ bool isArrowKey(int key)
 
 bool wantToQuit(int key)
 { //check if the key pressed is 'Q'
-	return (key == QUIT);
+	return (toupper(key) == QUIT);
 } //end of wantToQuit
 
 bool outOfLives(int lives)
@@ -262,6 +313,14 @@ bool outOfLives(int lives)
 	else
 		return true;
 } //end of outOfLives
+
+bool outOfPills(int pillsRemaining)
+{
+	if (pillsRemaining == 0)
+		return true;
+	else
+		return false;
+}
 
 //---------------------------------------------------------------------------
 //----- display info on screen
@@ -343,16 +402,28 @@ void showMessage(string m, int lives)
 	cout << "You have " << lives << " lives left";
 } //end of showMessage
 
-void endProgram(int lives)
+void endProgram(int lives, int key, int pillsRemaining)
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
 	Gotoxy(40, 8);
 	if (outOfLives(lives))
 		cout << "YOU LOST!              ";
-	else
+	if (wantToQuit(key))
 		cout << "PLAYER QUITS!          ";
+	if (outOfPills(pillsRemaining))
+		cout << "YOU WIN WITH " << lives << " LIVES REMAINING";
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 9);
 	system("pause");
 } //end of endProgram
+
+void removePill(vector<ChangingItem>& pills, Item sp, string& message, int& pillsRemaining)
+{
+	for (int i = 0; i < pills.size(); i++)					//for every pill
+	if (pills[i].x == sp.x && pills[i].y == sp.y)			//check if the pills coordinates equal spots coordinates
+	{
+		pills[i].isBeingRendered = false;					//if they do, no longer draw that pill
+		--pillsRemaining;
+	}
+}
