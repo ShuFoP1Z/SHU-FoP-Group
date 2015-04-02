@@ -158,7 +158,7 @@ void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 
 void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<ChangingItem>& pills)
 { //set the pills coordinates inside the grid randomly at the beginning of a game, checking theyre not on a taken space)
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < pills.size(); ++i)
 	{
 		pills[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		pills[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
@@ -167,7 +167,7 @@ void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Changing
 		if (pills[i].y == spot.y && pills[i].x == spot.x)	//if a pill is in the same place as spot
 			--i;											//then decrement i so the pill is moved somewhere else
 
-		for (int c = 0; c < 12; ++c)						//for every hole
+		for (int c = 0; c < holes.size(); ++c)						//for every hole
 			if (pills[i].y == holes[c].y && pills[i].x == holes[c].x)	//check if the new pill will be in the same space as a hole
 			--i;											//if it is remove that pill to create a new one
 	}
