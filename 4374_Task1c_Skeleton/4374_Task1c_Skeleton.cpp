@@ -154,30 +154,10 @@ void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 void setZombieInitialCoordinates(vector<ChangingItem>& zombies)
 {
 	//Will set up all 4 zombies to spawn in a corner
-	/* 
-		Add a function that knows all zombie original coordinates
-	*/
+	void resetZombiePosition(vector<ChangingItem>& zombies, int arrayIndex);
 	for (int i = 0; i < zombies.size(); ++i)
 	{
-		switch (i)
-		{
-		case 0:
-			zombies.at(i).x = 1;
-			zombies.at(i).y = 1;
-			break; 
-		case 1: 
-			zombies.at(i).x = (SIZEX - 2);
-			zombies.at(i).y = 1;
-			break;
-		case 2: 
-			zombies.at(i).x = 1; 
-			zombies.at(i).y = (SIZEY - 2);
-			break; 
-		case 3: 
-			zombies.at(i).x = (SIZEX - 2);
-			zombies.at(i).y = (SIZEY - 2);
-			break;
-		}
+		resetZombiePosition(zombies, i);
 	}
 }//end of setZombieInitialCoordinates
 void setGrid(char grid[][SIZEX])
@@ -277,14 +257,7 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<ChangingItem>& zombie
 			dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
 			dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
 		}
-		else
-		{
-			if (displaceX == 0)
-				dx = 0;
-			if (displaceY == 0)
-				dy = 0;
-		}
-
+		
 		const int targetX(zombies[i].x + dx);
 		const int targetY(zombies[i].y + dy);
 
