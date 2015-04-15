@@ -12,6 +12,7 @@ using namespace std;
 //include our own libraries
 #include "RandomUtils.h"					//for Seed, Random
 #include "ConsoleUtils.h"					//for Clrscr, Gotoxy, etc.
+#include "TimeUtils.h"						//for GetTime, GetDate
 
 //---------------------------------
 //define constants
@@ -31,7 +32,10 @@ const int  DOWN(80);						//down arrow
 const int  RIGHT(77);						//right arrow
 const int  LEFT(75);						//left arrow
 //defining the other command letters
+const char PLAY('P');						//play the game
 const char QUIT('Q');						//end the game
+const char INFO('I');						//show information
+const char BACK('\r');						//go back
 
 //data structure to store data for a grid item
 struct Item
@@ -47,46 +51,85 @@ struct Item
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes);
+	int  getKeyPress();
+	bool wantToQuit(int k);
+	void playGame();
+	void displayMenu();
+	void displayInfo();
+	void displayExit();
+	//local variable declarations 
+	bool running = true;									//to exit the game
+	bool back = false;										//to get back to the menu
+	int key(' ');											//create key to store keyboard events
+
+	//menu
+	do {
+		displayMenu();										//display the main menu
+		key = getKeyPress();								//read in next keyboard event
+		//game
+		if (toupper(key) == PLAY)
+			playGame();										//run the game
+		//quit
+		if (wantToQuit(key))
+		{
+			displayExit();									//display the exit message
+			system("pause");
+			running = false;								//quit the game
+		}
+		//info
+		if (toupper(key) == INFO)
+		{
+			do {
+				displayInfo();								//display the info screen
+				key = getKeyPress();						//read in next keyboard event
+				if (key == BACK)
+					back = true;
+			} while (!back);
+		}
+	} while (running);
+
+	return 0;
+} //end main
+
+void playGame()
+{
+	//function declarations (prototypes)
+	int  getKeyPress();
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
-	int  getKeyPress();
+	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes);
 	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
 	void endProgram(int lives);
 
 	//local variable declarations 
-	char grid[SIZEY][SIZEX];								//grid for display
 	int lives(3);											//The number of lives spot has
+	int key(' ');											//create key to store keyboard events
+	char grid[SIZEY][SIZEX];								//grid for display
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
-	string message("LET'S START...      ");					//current message to player
+	string message("         LET'S START...          ");	//current message to player
 
-	bool running = true;
-
-	//action...
+	bool playing = true;
 	initialiseGame(grid, spot, holes);						//initialise grid (incl. walls and spot)
-	int key(' ');											//create key to store keyboard events
-	do {
+	while (playing)
+	{
 		renderGame(grid, message, lives);					//render game state on screen
-		message = "                    ";					//reset message
+		message = "                                 ";		//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message);
 		else
-			message = "INVALID KEY!        ";				//set 'Invalid key' message
-
+			message = "          INVALID KEY!           ";	//set 'Invalid key' message
 		if (wantToQuit(key))								//if player wants to quit
-			running = false;
+			playing = false;
 		if (outOfLives(lives))								//if player is out of lives
-			running = false;
-	} while (running);
-
+			playing = false;
+	}
 	endProgram(lives);										//display final message
-	return 0;
-} //end main
+}
 
 void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message)
 { //updateGame state
@@ -100,7 +143,6 @@ void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int
 //---------------------------------------------------------------------------
 //----- initialise game state
 //---------------------------------------------------------------------------
-
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
@@ -110,7 +152,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes)
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
 
 	Seed();													//seed random number generator
-	
+
 	//do while?
 	setGrid(grid);											//reset empty grid
 	setSpotInitialCoordinates(spot);						//initialise spot position
@@ -169,7 +211,6 @@ void placeHoles(char gr[][SIZEX], vector<Item> holes)
 //---------------------------------------------------------------------------
 //----- update grid state
 //---------------------------------------------------------------------------
-
 void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
@@ -205,7 +246,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	case WALL:								//hit a wall and stay there
 		cout << '\a';						//beep the alarm
-		mess = "CANNOT GO THERE!    ";
+		mess = "       CANNOT GO THERE...        ";
 		break;
 	}
 } //end of updateSpotCoordinates
@@ -242,7 +283,7 @@ int getKeyPress()
 	keyPressed = getch();			//read in the selected arrow key or command letter
 	while (keyPressed == 224)		//ignore symbol following cursor key
 		keyPressed = getch();
-	return(keyPressed);   
+	return(keyPressed);
 } //end of getKeyPress
 
 bool isArrowKey(int key)
@@ -252,7 +293,7 @@ bool isArrowKey(int key)
 
 bool wantToQuit(int key)
 { //check if the key pressed is 'Q'
-	return (key == QUIT);
+	return (toupper(key) == QUIT);
 } //end of wantToQuit
 
 bool outOfLives(int lives)
@@ -266,30 +307,53 @@ bool outOfLives(int lives)
 //---------------------------------------------------------------------------
 //----- display info on screen
 //---------------------------------------------------------------------------
-void clearMessage()
-{ //clear message area on screen
-	SelectBackColour(clBlack);
-	SelectTextColour(clWhite);
-	Gotoxy(40, 9);
-	string str(20, ' ');
-	cout << str;								//display blank message
+void displayMenu()
+{
+	void showMenuTitle();
+	void showDateAndTime();
+	void showCredits();
+	void showInfo();
 
-} //end of setMessage
+	SelectBackColour(clBlack);
+	Clrscr();
+
+	showMenuTitle();
+	showDateAndTime();
+	showCredits();
+	showInfo();
+}
+
+void displayInfo()
+{
+	void showMenuTitle();
+	void showDateAndTime();
+	void showHelp();
+	void showOptions();
+
+	showMenuTitle();
+	showDateAndTime();
+	showHelp();
+	showOptions();
+}
 
 void renderGame(const char gd[][SIZEX], string mess, int lives)
 { //display game title, messages, maze, spot and apples on screen
 	void paintGrid(const char g[][SIZEX]);
-	void showTitle();
-	void showOptions();
+	void showGameTitle();
+	void showGameOptions();
+	void showDateAndTime();
 	void showMessage(string, int lives);
 
+	SelectBackColour(clBlack);
+	Clrscr();
 	Gotoxy(0, 0);
 	//display grid contents
 	paintGrid(gd);
 	//display game title
-	showTitle();
-	//display menu options available
-	showOptions();
+	showGameTitle();
+	showDateAndTime();
+	//display game options available
+	showGameOptions();
 	//display message if any
 	showMessage(mess, lives);
 } //end of paintGame
@@ -298,61 +362,191 @@ void paintGrid(const char g[][SIZEX])
 { //display grid content on screen
 	SelectBackColour(clBlack);
 	SelectTextColour(clWhite);
-	Gotoxy(0, 2);
+	Gotoxy(10, 4);
 	for (int row(0); row < SIZEY; ++row)		//for each row (vertically)
 	{
 		for (int col(0); col < SIZEX; ++col)	//for each column (horizontally)
 		{
 			cout << g[row][col];				//output cell content
 		} //end of col-loop
-		cout << endl;
+		cout << endl << "          ";
 	} //end of row-loop
 } //end of paintGrid
 
-void showTitle()
-{ //display game title
-	SelectTextColour(clYellow);
-	Gotoxy(0, 0);
-	cout << "___ZOMBIES GAME SKELETON___\n" << endl;
-	SelectBackColour(clWhite);
-	SelectTextColour(clRed);
-	Gotoxy(40, 0);
-	cout << "Ashley Swanson: March 15";
-} //end of showTitle
-
-
-void showOptions()
-{ //show game options
-
-	SelectBackColour(clRed);
-	SelectTextColour(clYellow);
-	Gotoxy(40, 5);
-	cout << "TO MOVE USE KEYBOARD ARROWS  ";
-	Gotoxy(40, 6);
-	cout << "TO QUIT ENTER 'Q'   ";
-
-} //end of showOptions
-
 void showMessage(string m, int lives)
 { //print auxiliary messages if any
-	SelectBackColour(clBlack);
-	SelectTextColour(clWhite);
-	Gotoxy(40, 9);
+	SelectBackColour(clDarkCyan);
+	SelectTextColour(clGreen);
+	Gotoxy(40, 13);
+	cout << "      You have " << lives << " lives left      ";
+	Gotoxy(40, 14);
 	cout << m;	//display current message
-	Gotoxy(40, 11);
-	cout << "You have " << lives << " lives left";
 } //end of showMessage
+
+void clearMessage()
+{ //clear message area on screen
+	SelectBackColour(clDarkCyan);
+	SelectTextColour(clGreen);
+	Gotoxy(40, 14);
+	string str(33, ' ');
+	cout << str;								//display blank message
+} //end of setMessage
+
+void showMenuTitle()
+{
+	SelectBackColour(clWhite);
+	SelectTextColour(clBlack);
+	Gotoxy(10, 2);
+	cout << "                    ";
+	Gotoxy(10, 3);
+	cout << "  ----------------  ";
+	Gotoxy(10, 4);
+	cout << "  LEFT FOR DEAD: 3  ";
+	Gotoxy(10, 5);
+	cout << "  ----------------  ";
+	Gotoxy(10, 6);
+	cout << "                    ";
+}
+
+void showGameTitle()
+{ //display game title
+	SelectBackColour(clWhite);
+	SelectTextColour(clBlack);
+	Gotoxy(9, 2);
+	cout << "   LEFT FOR DEAD: 3   ";
+} //end of showTitle
+
+void showDateAndTime()
+{
+	SelectBackColour(clDarkYellow);
+	SelectTextColour(clYellow);
+	Gotoxy(40, 2);
+	cout << "  ASHLEY SWANSON 1st April 2015  ";
+	Gotoxy(40, 3);
+	cout << "      " << GetDate() << "   " << GetTime() << "      ";
+}
+
+void showCredits()
+{
+	SelectBackColour(clBlue);
+	SelectTextColour(clWhite);
+	Gotoxy(10, 8);
+	cout << "  GROUP 1Z:         ";
+	Gotoxy(10, 9);
+	cout << "  Masimba Walker    ";
+	Gotoxy(10, 10);
+	cout << "  Kris Taylor       ";
+	Gotoxy(10, 11);
+	cout << "  Ashley Swanson    ";
+	Gotoxy(10, 13);
+	cout << " (We are in no way  ";
+	Gotoxy(10, 14);
+	cout << "  affiliated with   ";
+	Gotoxy(10, 15);
+	cout << " Valve Corporation) ";
+}
+
+void showInfo()
+{
+	SelectBackColour(clDarkMagenta);
+	SelectTextColour(clGrey);
+	Gotoxy(40, 5);
+	cout << " Left for Dead: 3 is a top-down  ";
+	Gotoxy(40, 6);
+	cout << " strategy game, where you find   ";
+	Gotoxy(40, 7);
+	cout << " yourself avoiding the horde AND ";
+	Gotoxy(40, 8);
+	cout << " feeding your addiction to pixels";
+	Gotoxy(40, 9);
+	cout << "                                 ";
+	Gotoxy(40, 10);
+	cout << " PRESS P TO START PLAYING        ";
+	Gotoxy(40, 11);
+	cout << " PRESS I FOR MORE INFORMATION    ";
+}
+
+void showOptions()
+{ //show options
+	SelectBackColour(clDarkMagenta);
+	SelectTextColour(clGrey);
+	Gotoxy(40, 5);
+	cout << " PRESS ENTER TO GO BACK          ";
+	Gotoxy(40, 6);
+	cout << " PRESS P TO PLAY, Q TO QUIT      ";
+	Gotoxy(40, 7);
+	cout << "                                 ";
+	Gotoxy(40, 8);
+	cout << " MOVE USING THE ARROW KEYS       ";
+	Gotoxy(40, 9);
+	cout << " PRESS F TO FREEZE THE ZOMBIES   ";
+	Gotoxy(40, 10);
+	cout << " PRESS X TO KILL ALL ZOMBIES     ";
+	Gotoxy(40, 11);
+	cout << " PRESS E TO EAT ALL THE PILLS    ";
+} //end of showOptions
+
+void showGameOptions()
+{ //show game options
+	SelectBackColour(clDarkMagenta);
+	SelectTextColour(clGrey);
+	Gotoxy(40, 5);
+	cout << "  Collect Pills - Avoid Zombies  ";
+	Gotoxy(40, 6);
+	cout << "                                 ";
+	Gotoxy(40, 7);
+	cout << " MOVE USING THE ARROW KEYS       ";
+	Gotoxy(40, 8);
+	cout << " PRESS F TO FREEZE THE ZOMBIES   ";
+	Gotoxy(40, 9);
+	cout << " PRESS X TO KILL ALL ZOMBIES     ";
+	Gotoxy(40, 10);
+	cout << " PRESS E TO EAT ALL THE PILLS    ";
+	Gotoxy(40, 11);
+	cout << " PRESS Q TO QUIT THE GAME        ";
+} //end of showGameOptions
+
+void showHelp()
+{
+	SelectBackColour(clBlue);
+	SelectTextColour(clWhite);
+	Gotoxy(10, 8);
+	cout << "  AIM OF THE GAME:  ";
+	Gotoxy(10, 9);
+	cout << " - Collect Pills    ";
+	Gotoxy(10, 10);
+	cout << " - Avoid Zombies    ";
+	Gotoxy(10, 11);
+	cout << " - Avoid Holes      ";
+	Gotoxy(10, 13);
+	cout << " YOUR SCORE IS MADE ";
+	Gotoxy(10, 14);
+	cout << " BY CALCULATING DIS ";
+	Gotoxy(10, 15);
+	cout << " STUFF I DON'T KNOW ";
+}
 
 void endProgram(int lives)
 { //end program with appropriate message
-	SelectBackColour(clBlack);
-	SelectTextColour(clYellow);
-	Gotoxy(40, 8);
+	SelectBackColour(clBlue);
+	SelectTextColour(clWhite);
+	Gotoxy(40, 13);
 	if (outOfLives(lives))
-		cout << "YOU LOST!              ";
+		cout << "            YOU LOST!            ";
 	else
-		cout << "PLAYER QUITS!          ";
+		cout << "          PLAYER QUITS!          ";
 	//hold output screen until a keyboard key is hit
-	Gotoxy(40, 9);
+	Gotoxy(40, 14);
+	cout << " ";
 	system("pause");
 } //end of endProgram
+
+void displayExit()
+{
+	SelectBackColour(clBlue);
+	SelectTextColour(clWhite);
+	Gotoxy(40, 13);
+	cout << "       THANKS FOR PLAYING!       ";
+	Gotoxy(40, 14);
+	cout << " ";
+}
