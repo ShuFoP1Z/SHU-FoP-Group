@@ -26,6 +26,8 @@ const char TUNNEL(' ');						//open space
 const char WALL('#');						//border
 const char HOLE('O');						//hole
 const char PILL('*');						//pill
+const char ZOMBIE('Z');						//Zombie
+
 //defining the command letters to move spot on the maze
 const int  UP(72);							//up arrow
 const int  DOWN(80);						//down arrow
@@ -43,9 +45,9 @@ struct Item
 
 struct ChangingItem
 {
-	const char symbol;
-	int x, y;
-	bool isBeingRendered;
+	const char symbol;						//symbol on grid
+	int x, y;								//coordinates
+	bool isBeingRendered;					//boolean to determine whether its being rendered
 };
 
 //---------------------------------------------------------------------------
@@ -55,13 +57,14 @@ struct ChangingItem
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills);
+
+	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills, vector<ChangingItem>& zombies);
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
 	bool outOfPills(int pillsRemaining);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining);
+	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining, vector<ChangingItem>& zombies);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
 	void endProgram(int lives, int key, int pillsRemaining);
 
@@ -71,22 +74,28 @@ int main()
 	int pillsRemaining(5);									//The number of pills still being shown
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
+
 	ChangingItem pill = { PILL };									//Pill's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
 	vector <ChangingItem> pills(5, pill);							//Creates a vector of pills, with each element being initialised as pills
+	ChangingItem zombie = { ZOMBIE };								//Zombies symbol and position (0, 0)
+	vector<ChangingItem> zombies(4, zombie);				     	//Initialise a vector of zombies, each element will be initialised as zombie
+
 	string message("LET'S START...      ");					//current message to player
 
 	bool running = true;
 
 	//action...
-	initialiseGame(grid, spot, holes, pills);						//initialise grid (incl. walls and spot)
+
+	initialiseGame(grid, spot, holes, pills, zombies);						//initialise grid (incl. walls and spot)
+
 	int key(' ');											//create key to store keyboard events
 	do {
 		renderGame(grid, message, lives);					//render game state on screen
 		message = "                    ";					//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining);
+			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies);
 		else
 			message = "INVALID KEY!        ";				//set 'Invalid key' message
 
@@ -102,20 +111,22 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<ChangingItem>& pills, int& pillsRemaining)
+
+void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<ChangingItem>& pills, int& pillsRemaining, vector<ChangingItem>& zombies)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, int& lives, string& mess, vector<ChangingItem>& pills, int& pillsRemaining);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills);
+	void updateZombieCoordinates(const char g[][SIZEX], vector<ChangingItem>& zombies, Item spot, int& lives, string& message);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills, vector<ChangingItem> zombies);
 
 	updateSpotCoordinates(grid, spot, key, lives, message, pills, pillsRemaining);	//update according to key
-	updateGrid(grid, spot, holes, pills);							//update grid information
+	updateZombieCoordinates(grid, zombies, spot, lives, message);	//update the zombie position based on spots location
+	updateGrid(grid, spot, holes, pills, zombies);							//update grid information
 }
-
 //---------------------------------------------------------------------------
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills)
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<ChangingItem>& pills, vector<ChangingItem>& zombies)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
@@ -124,6 +135,11 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 	void placeSpot(char gr[][SIZEX], Item spot);
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
 	void placePills(char gr[][SIZEX], vector<ChangingItem> pills);
+
+	void setZombieInitialCoordinates(vector<ChangingItem>& zombies);
+	void placeSpot(char gr[][SIZEX], Item spot);
+	void placeHoles(char gr[][SIZEX], vector<Item> holes);
+	void placeZombies(char gr[][SIZEX], vector<ChangingItem> zombies);
 
 	Seed();													//seed random number generator
 
@@ -136,6 +152,8 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 	setPillsInitialCoordinates(holes, spot, pills);			//initialise pills position
 	placePills(grid, pills);								//set pills in grid
 
+	setZombieInitialCoordinates(zombies);					//setup the positions of each zombie
+	placeZombies(grid, zombies);							//place the zombies in the grid
 } //end of initialiseGame
 
 void setSpotInitialCoordinates(Item& spot)
@@ -146,7 +164,7 @@ void setSpotInitialCoordinates(Item& spot)
 
 void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 { //set hole coordinates inside the grid at random at beginning of game
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < holes.size(); ++i)
 	{
 		holes[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		holes[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
@@ -155,6 +173,7 @@ void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
 			--i;											//then decrement i so the hole is moved somewhere else
 	}
 } //end of setHoleInitialCoordinates
+
 
 void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<ChangingItem>& pills)
 { //set the pills coordinates inside the grid randomly at the beginning of a game, checking theyre not on a taken space)
@@ -172,6 +191,17 @@ void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Changing
 			--i;											//if it is remove that pill to create a new one
 	}
 } //end of setPillsInitialCoordinates
+
+void setZombieInitialCoordinates(vector<ChangingItem>& zombies)
+{
+	//Will set up all 4 zombies to spawn in a corner
+	void resetZombiePosition(vector<ChangingItem>& zombies, int arrayIndex);
+
+	for (int i = 0; i < zombies.size(); ++i)
+	{
+		resetZombiePosition(zombies, i);
+	}
+}//end of setZombieInitialCoordinates
 
 void setGrid(char grid[][SIZEX])
 { //reset the empty grid configuration
@@ -197,9 +227,10 @@ void placeSpot(char gr[][SIZEX], Item spot)
 
 void placeHoles(char gr[][SIZEX], vector<Item> holes)
 { //place holes at their new positions in grid
-	for (int i = 0; i < 12; ++i)
+	for (int i = 0; i < holes.size(); ++i)
 		gr[holes[i].y][holes[i].x] = holes[i].symbol;
 } //end of placeHoles
+
 
 void placePills(char gr[][SIZEX], vector<ChangingItem> pills)
 { //place pills at their new positions in grid
@@ -208,21 +239,32 @@ void placePills(char gr[][SIZEX], vector<ChangingItem> pills)
 			gr[pills[i].y][pills[i].x] = pills[i].symbol;	//if it hasn't, place that pill in the grid
 } //end of placePills
 
+
+void placeZombies(char gr[][SIZEX], vector<ChangingItem> zombies)
+{
+	for (int i = 0; i < zombies.size(); ++i)
+	{
+		gr[zombies[i].y][zombies[i].x] = zombies[i].symbol; //Places a zombie symbol at the x & y of each zombie index in the vector
+	}
+}//end of placeZombies
+
 //---------------------------------------------------------------------------
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes, vector<ChangingItem> pills, vector<ChangingItem> zombies)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 	void placeHoles(char g[][SIZEX], vector<Item> holes);
 	void placePills(char g[][SIZEX], vector<ChangingItem> pills);
+	void placeZombies(char g[][SIZEX], vector<ChangingItem> zombies);
 
 	setGrid(grid);							//reset empty grid
 	placeHoles(grid, holes);				//set holes in grid
 	placePills(grid, pills);				//set pills in grid
 	placeSpot(grid, spot);					//set spot in grid
+	placeZombies(grid, zombies);			//set zombies in the grid
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
@@ -250,6 +292,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	case HOLE:								//can move
 		--lives;
+		break;
 	case TUNNEL:
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
@@ -260,7 +303,71 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	}
 } //end of updateSpotCoordinates
+void updateZombieCoordinates(const char g[][SIZEX], vector<ChangingItem>& zombies, Item spot, int& lives, string& message)
+{
+	void resetZombiePosition(vector<ChangingItem>& zombies, int arrayIndex); //Will reset the zombies position 
+	int dx(0), dy(0); //The maximum amount the player can move by
+	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
 
+	for (int i = 0; i < zombies.size(); ++i)
+	{
+		displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
+		displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
+		
+		if (displaceX != 0  && displaceY != 0)
+		{
+			//
+			dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
+			dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
+		}
+		
+		const int targetX(zombies[i].x + dx);
+		const int targetY(zombies[i].y + dy);
+
+		switch (g[targetY][targetX])
+		{
+		case PILL:
+		case TUNNEL:
+			zombies[i].x += dx; 
+			zombies[i].y += dy;
+			break; 
+		case HOLE: 
+			resetZombiePosition(zombies, i);
+			break;
+		case ZOMBIE:
+			resetZombiePosition(zombies, i); //Prevent zombie stacking
+			break;
+		case SPOT:
+			--lives; 
+			resetZombiePosition(zombies, i);
+			break;
+		}
+	}
+
+	
+}//end of updateZombieCoordinates
+void resetZombiePosition(vector<ChangingItem>& zombies, int arrayIndex) 
+{
+	switch (arrayIndex)
+	{
+	case 0:
+		zombies[arrayIndex].x = 1;
+		zombies[arrayIndex].y = 1;
+		break;
+	case 1:
+		zombies[arrayIndex].x = (SIZEX - 2);
+		zombies[arrayIndex].y = 1;
+		break;
+	case 2:
+		zombies[arrayIndex].x = 1;
+		zombies[arrayIndex].y = (SIZEY - 2);
+		break;
+	case 3:
+		zombies[arrayIndex].x = (SIZEX - 2);
+		zombies[arrayIndex].y = (SIZEY - 2);
+		break;
+	}
+}//end of resetZombiePosition
 //---------------------------------------------------------------------------
 //----- process key
 //---------------------------------------------------------------------------
@@ -376,7 +483,7 @@ void showTitle()
 	SelectBackColour(clWhite);
 	SelectTextColour(clRed);
 	Gotoxy(40, 0);
-	cout << "Ashley Swanson: March 15";
+	cout << "Ashley Swanson, Masimba Walker, Kris Taylor - 1Z : March 25th";
 } //end of showTitle
 
 
