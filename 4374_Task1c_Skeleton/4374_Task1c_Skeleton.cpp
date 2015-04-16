@@ -240,6 +240,9 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 	{//...depending on what's on the target position in grid...
 	case HOLE:								//can move
 		--lives;
+		sp.y += dy;							//go in that Y direction
+		sp.x += dx;							//go in that X direction
+		break;
 	case TUNNEL:
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
@@ -312,6 +315,7 @@ void displayMenu()
 	void showMenuTitle();
 	void showDateAndTime();
 	void showCredits();
+	//void score thing
 	void showInfo();
 
 	SelectBackColour(clBlack);
@@ -320,6 +324,7 @@ void displayMenu()
 	showMenuTitle();
 	showDateAndTime();
 	showCredits();
+	//showScore thing
 	showInfo();
 }
 
@@ -445,6 +450,8 @@ void showCredits()
 	Gotoxy(10, 15);
 	cout << " Valve Corporation) ";
 }
+
+//void showScoreEntry() (Start line on Gotoxy(10, 17))
 
 void showInfo()
 {
