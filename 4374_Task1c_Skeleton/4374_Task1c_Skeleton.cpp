@@ -100,10 +100,11 @@ void playGame()
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
+	bool outOfZombies(vector<Item> zombies);
 	int  getKeyPress();
 	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
-	void endProgram(int lives, int key);
+	void endProgram(int lives, int key, vector<Item>zombies);
 
 	//local variable declarations 
 	char grid[SIZEY][SIZEX];								//grid for display
@@ -140,9 +141,11 @@ void playGame()
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
 			running = false;
+		if (outOfZombies(zombies))							//if all the zombies are dead
+			running = false;
 	} while (running);
 
-	endProgram(lives, key);
+	endProgram(lives, key, zombies);
 }
 
 void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies)
@@ -229,6 +232,7 @@ void setZombieInitialCoordinates(vector<Item>& zombies)
 
 	for (int i = 0; i < zombies.size(); ++i)
 	{
+		zombies[i].isBeingRendered = true;
 		resetZombiePosition(zombies, i);
 	}
 }//end of setZombieInitialCoordinates
@@ -273,7 +277,8 @@ void placeZombies(char gr[][SIZEX], vector<Item> zombies)
 {
 	for (int i = 0; i < zombies.size(); ++i)
 	{
-		gr[zombies[i].y][zombies[i].x] = zombies[i].symbol; //Places a zombie symbol at the x & y of each zombie index in the vector
+		if (zombies[i].isBeingRendered) //If the zombie is being rendered
+			gr[zombies[i].y][zombies[i].x] = zombies[i].symbol; //Places a zombie symbol at the x & y of each zombie index in the vector
 	}
 }//end of placeZombies
 //---------------------------------------------------------------------------
@@ -359,7 +364,7 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 			zombies[i].y += dy;
 			break;
 		case HOLE:
-			resetZombiePosition(zombies, i);
+			zombies[i].isBeingRendered = false;
 			break;
 		case ZOMBIE:
 			resetZombiePosition(zombies, i); //Prevent zombie stacking
@@ -447,7 +452,16 @@ bool outOfLives(int lives)
 	else
 		return true;
 } //end of outOfLives
-
+bool outOfZombies(vector<Item> zombies)
+{//Check if all the zombies have died
+	int counter = 0;
+	for (int i = 0; i < zombies.size(); ++i)
+	{
+		if (!zombies[i].isBeingRendered)
+			++counter;
+	}
+	return(counter == 4);
+}//end outOfZombies
 //---------------------------------------------------------------------------
 //----- display info on screen
 //---------------------------------------------------------------------------
@@ -674,7 +688,7 @@ void showHelp()
 	cout << " STUFF I DON'T KNOW ";
 }
 
-void endProgram(int lives, int key)
+void endProgram(int lives, int key, vector<Item> zombies)
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
@@ -683,6 +697,8 @@ void endProgram(int lives, int key)
 		cout << "YOU LOST!              ";
 	if (wantToQuit(key))
 		cout << "PLAYER QUITS!          ";
+	if (outOfZombies(zombies))
+		cout << "ALL ZOMBIES DIED!      ";
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 9);
