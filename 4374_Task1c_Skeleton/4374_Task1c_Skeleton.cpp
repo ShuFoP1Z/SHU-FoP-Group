@@ -38,6 +38,9 @@ const char PLAY('P');						//play the game
 const char QUIT('Q');						//end the game
 const char INFO('I');						//show information
 const char BACK('\r');						//go back
+const char EXTERMINATE('X');				//kill all zombies
+const char FREEZE('F');						//freeze all zombies
+const char EAT('E');						//eat all the pills
 
 //data structure to store data for a grid item
 struct Item
@@ -100,10 +103,12 @@ void playGame()
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
+	bool outOfZombies(vector<Item> zombies);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies);
+	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies, bool frozen);
 	void renderGame(const char g[][SIZEX], string mess, int lives);
-	void endProgram(int lives, int key);
+	void endProgram(int lives, int key, vector<Item>zombies);
+	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen);
 
 	//local variable declarations 
 	char grid[SIZEY][SIZEX];								//grid for display
@@ -111,6 +116,7 @@ void playGame()
 	int pillsRemaining(5);									//The number of pills still being shown
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
+	bool frozen(false);
 
 	Item pill = { PILL };									//Pill's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
@@ -132,27 +138,29 @@ void playGame()
 		message = "                    ";					//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies);
+			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies, frozen);
 		else
 			message = "INVALID KEY!        ";				//set 'Invalid key' message
-
+		cheats(lives, zombies, pills, key, frozen);			//see if there are cheats
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
 			running = false;
+		if (outOfZombies(zombies))							//if all the zombies are dead
+			running = false;
 	} while (running);
 
-	endProgram(lives, key);
+	endProgram(lives, key, zombies);
 }
 
-void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies)
+void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies, bool frozen)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining);
-	void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item spot, int& lives, string& message);
+	void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item spot, int& lives, string& message, bool frozen);
 	void updateGrid(char g[][SIZEX], Item spot, vector<Item> holes, vector<Item> pills, vector<Item> zombies);
 
 	updateSpotCoordinates(grid, spot, key, lives, message, pills, pillsRemaining);	//update according to key
-	updateZombieCoordinates(grid, zombies, spot, lives, message);	//update the zombie position based on spots location
+	updateZombieCoordinates(grid, zombies, spot, lives, message, frozen);	//update the zombie position based on spots location
 	updateGrid(grid, spot, holes, pills, zombies);							//update grid information
 }
 //---------------------------------------------------------------------------
@@ -229,6 +237,7 @@ void setZombieInitialCoordinates(vector<Item>& zombies)
 
 	for (int i = 0; i < zombies.size(); ++i)
 	{
+		zombies[i].isBeingRendered = true;
 		resetZombiePosition(zombies, i);
 	}
 }//end of setZombieInitialCoordinates
@@ -273,7 +282,8 @@ void placeZombies(char gr[][SIZEX], vector<Item> zombies)
 {
 	for (int i = 0; i < zombies.size(); ++i)
 	{
-		gr[zombies[i].y][zombies[i].x] = zombies[i].symbol; //Places a zombie symbol at the x & y of each zombie index in the vector
+		if (zombies[i].isBeingRendered) //If the zombie is being rendered
+			gr[zombies[i].y][zombies[i].x] = zombies[i].symbol; //Places a zombie symbol at the x & y of each zombie index in the vector
 	}
 }//end of placeZombies
 //---------------------------------------------------------------------------
@@ -330,66 +340,88 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	}
 } //end of updateSpotCoordinates
-void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item spot, int& lives, string& message)
+void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item spot, int& lives, string& message, bool frozen)
 {
 	void resetZombiePosition(vector<Item>& zombies, int arrayIndex); //Will reset the zombies position 
 	int dx(0), dy(0); //The maximum amount the player can move by
 	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
 
-	for (int i = 0; i < zombies.size(); ++i)
+	if (frozen == false)
 	{
-		displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
-		displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
-
-		if (displaceX != 0 && displaceY != 0)
+		for (int i = 0; i < zombies.size(); ++i)
 		{
-			//
-			dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
-			dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
-		}
+			if (zombies[i].isBeingRendered)
+			{
+				displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
+				displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
 
-		const int targetX(zombies[i].x + dx);
-		const int targetY(zombies[i].y + dy);
+				if (displaceX != 0)//If the x displacement isn't 0 
+				{
+					dx = displaceX / abs(displaceX); //divide the displacement in x by it's absolute value (to give us either +1 or -1 change)
+				}
+				else //if x displacement is 0
+				{
+					dx = 0; //set dx to 0 
+				}
 
-		switch (g[targetY][targetX])
-		{
-		case PILL:
-		case TUNNEL:
-			zombies[i].x += dx;
-			zombies[i].y += dy;
-			break;
-		case HOLE:
-			resetZombiePosition(zombies, i);
-			break;
-		case ZOMBIE:
-			resetZombiePosition(zombies, i); //Prevent zombie stacking
-			break;
-		case SPOT:
-			--lives;
-			resetZombiePosition(zombies, i);
-			break;
+				if (displaceY != 0) //If the y displacement isn't 0
+				{
+					dy = displaceY / abs(displaceY);//divide the displacement in y by it's absolute value (to givve us either +1 or -1 change)
+				}
+				else//if y displacement is 0 
+				{
+					dy = 0; //set dy to 0 
+				}
+				const int targetX(zombies[i].x + dx); //Set the target destination of the zombie's x to it's x position + the new change
+				const int targetY(zombies[i].y + dy);//Set the target destination of the zombie's y to it's y position + the new change
+
+				//Switch statement check this target location
+				switch (g[targetY][targetX])
+				{
+					//If the location on the grid has a pill, then follow the tunnel behaviour and walk onto the pill
+				case PILL:
+				case TUNNEL:
+					//if it's a tunnel walk into the locaiton
+					zombies[i].x += dx;
+					zombies[i].y += dy;
+					break;
+				case HOLE:
+					//if it's a hole then the zombie is removed from the game render & update loop so it's no longer shown or interacting
+					zombies[i].isBeingRendered = false;
+					break;
+				case ZOMBIE:
+					//If a zombie lands on another zombie, then it must reset it's own poisition
+					resetZombiePosition(zombies, i); //Prevent zombie stacking
+					break;
+				case SPOT:
+					//If the zombie collides with spot it minuses a life from spot then moves back to it's initial position
+					--lives;
+					resetZombiePosition(zombies, i);
+					break;
+				}
+			}
 		}
 	}
 
 
 }//end of updateZombieCoordinates
 void resetZombiePosition(vector<Item>& zombies, int arrayIndex)
-{
+{//A function that knows all the start locations of the zombies based on their index in the array
 	switch (arrayIndex)
 	{
-	case 0:
+	case 0://top left
 		zombies[arrayIndex].x = 1;
 		zombies[arrayIndex].y = 1;
 		break;
-	case 1:
+	case 1://bottom left
 		zombies[arrayIndex].x = (SIZEX - 2);
 		zombies[arrayIndex].y = 1;
 		break;
-	case 2:
+	case 2://top right
 		zombies[arrayIndex].x = 1;
 		zombies[arrayIndex].y = (SIZEY - 2);
 		break;
-	case 3:
+	case 3://bottom right
 		zombies[arrayIndex].x = (SIZEX - 2);
 		zombies[arrayIndex].y = (SIZEY - 2);
 		break;
@@ -447,7 +479,16 @@ bool outOfLives(int lives)
 	else
 		return true;
 } //end of outOfLives
-
+bool outOfZombies(vector<Item> zombies)
+{//Check if all the zombies have died
+	int counter = 0;
+	for (int i = 0; i < zombies.size(); ++i)
+	{
+		if (!zombies[i].isBeingRendered)
+			++counter;
+	}
+	return(counter == 4);
+}//end outOfZombies
 //---------------------------------------------------------------------------
 //----- display info on screen
 //---------------------------------------------------------------------------
@@ -674,7 +715,7 @@ void showHelp()
 	cout << " STUFF I DON'T KNOW ";
 }
 
-void endProgram(int lives, int key)
+void endProgram(int lives, int key, vector<Item> zombies)
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
@@ -683,6 +724,8 @@ void endProgram(int lives, int key)
 		cout << "YOU LOST!              ";
 	if (wantToQuit(key))
 		cout << "PLAYER QUITS!          ";
+	if (outOfZombies(zombies))
+		cout << "ALL ZOMBIES DIED!      ";
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 9);
@@ -707,3 +750,27 @@ void removePill(vector<Item>& pills, Item sp, string& message, int& pillsRemaini
 		--pillsRemaining;
 		}
 }//end of removePill
+
+void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen)
+{
+	if (toupper(key) == EAT)
+	{
+		for (int i = 0; i < pills.size(); ++i)
+			pills[i].isBeingRendered = false;
+	}
+
+	if (toupper(key) == EXTERMINATE)
+	{
+		for (int i = 0; i < zombies.size(); ++i)
+			zombies[i].isBeingRendered = false;
+	}
+
+	if (toupper(key) == FREEZE)
+	{
+
+		if (frozen == false)
+			frozen = true;
+		else
+			frozen = false;
+	}
+}
