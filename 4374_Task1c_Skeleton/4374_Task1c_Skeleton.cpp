@@ -7,6 +7,7 @@
 #include <conio.h>							//for getch()
 #include <string>							//for string
 #include <vector>							//for vectors
+#include <fstream>							//for ofstream & ifstream
 using namespace std;
 
 //include our own libraries
@@ -21,6 +22,7 @@ using namespace std;
 //defining the size of the grid
 const int SIZEY(12);						//vertical dimension
 const int SIZEX(20);						//horizontal dimension
+const string EXTENSION = ".scr";			//file extension for the playerscore
 //defining symbols used for display of the grid and content
 const char SPOT('@');						//spot
 const char TUNNEL(' ');						//open space
@@ -55,22 +57,25 @@ int main()
 	//function declarations (prototypes)
 	int  getKeyPress();
 	bool wantToQuit(int k);
-	void playGame();
+	void playGame(string playerName);
 	void displayMenu();
 	void displayInfo();
 	void displayExit();
+	string getPlayerName();
+
 	//local variable declarations 
 	bool running = true;									//to exit the game
 	bool back = false;										//to get back to the menu
 	int key(' ');											//create key to store keyboard events
-
+	string playerName;
 	//menu
 	do {
 		displayMenu();										//display the main menu
 		key = getKeyPress();								//read in next keyboard event
 		//game
 		if (toupper(key) == PLAY)
-			playGame();										//run the game
+			playerName = getPlayerName();
+			playGame(playerName);										//run the game
 		//quit
 		if (wantToQuit(key))
 		{
@@ -93,7 +98,7 @@ int main()
 	return 0;
 } //end main
 
-void playGame()
+void playGame(string playerName)
 {
 	//function declarations (prototypes)
 	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies);
@@ -103,13 +108,15 @@ void playGame()
 	bool outOfZombies(vector<Item> zombies);
 	int  getKeyPress();
 	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies);
-	void renderGame(const char g[][SIZEX], string mess, int lives);
-	void endProgram(int lives, int key, vector<Item>zombies);
+	void renderGame(const char g[][SIZEX], string mess, int lives, string playerName, int highScore);
+	void endProgram(int lives, int key, vector<Item>zombies, string name);
+	int getPlayerScore(string name);
 
 	//local variable declarations 
 	char grid[SIZEY][SIZEX];								//grid for display
 	int lives(3);											//The number of lives spot has
 	int pillsRemaining(5);									//The number of pills still being shown
+	const int highScore = getPlayerScore(playerName);					//get the players highest score
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
 
@@ -129,7 +136,7 @@ void playGame()
 
 	int key(' ');											//create key to store keyboard events
 	do {
-		renderGame(grid, message, lives);					//render game state on screen
+		renderGame(grid, message, lives, playerName, highScore);					//render game state on screen
 		message = "                    ";					//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
@@ -145,7 +152,7 @@ void playGame()
 			running = false;
 	} while (running);
 
-	endProgram(lives, key, zombies);
+	endProgram(lives, key, zombies, playerName);
 }
 
 void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies)
@@ -490,8 +497,8 @@ void displayMenu()
 	void showMenuTitle();
 	void showDateAndTime();
 	void showCredits();
-	//void score thing
 	void showInfo();
+	
 
 	SelectBackColour(clBlack);
 	Clrscr();
@@ -501,8 +508,8 @@ void displayMenu()
 	showCredits();
 	//showScore thing
 	showInfo();
-}
 
+}
 void displayInfo()
 {
 	void showMenuTitle();
@@ -516,12 +523,13 @@ void displayInfo()
 	showOptions();
 }
 
-void renderGame(const char gd[][SIZEX], string mess, int lives)
+void renderGame(const char gd[][SIZEX], string mess, int lives, string playerName, int highScore)
 { //display game title, messages, maze, spot and apples on screen
 	void paintGrid(const char g[][SIZEX]);
 	void showGameTitle();
 	void showGameOptions();
 	void showDateAndTime();
+	void showPlayerScore(string playerName, int highScore);
 	void showMessage(string, int lives);
 
 	SelectBackColour(clBlack);
@@ -536,6 +544,7 @@ void renderGame(const char gd[][SIZEX], string mess, int lives)
 	showGameOptions();
 	//display message if any
 	showMessage(mess, lives);
+	showPlayerScore(playerName, highScore);
 } //end of paintGame
 
 void paintGrid(const char g[][SIZEX])
@@ -552,7 +561,13 @@ void paintGrid(const char g[][SIZEX])
 		cout << endl << "          ";
 	} //end of row-loop
 } //end of paintGrid
-
+void showPlayerScore(string playerName, int highScore)
+{
+	Gotoxy(40, 16);
+	cout << "Name - " << playerName << endl;
+	Gotoxy(40, 17); 
+	cout << "Score - " << highScore << endl;
+}
 void showMessage(string m, int lives)
 { //print auxiliary messages if any
 	SelectBackColour(clDarkCyan);
@@ -586,7 +601,7 @@ void showMenuTitle()
 	cout << "  ----------------  ";
 	Gotoxy(10, 6);
 	cout << "                    ";
-}
+}//end of showMenuTitle
 
 void showGameTitle()
 { //display game title
@@ -604,7 +619,7 @@ void showDateAndTime()
 	cout << "  ASHLEY SWANSON 1st April 2015  ";
 	Gotoxy(40, 3);
 	cout << "      " << GetDate() << "   " << GetTime() << "      ";
-}
+}//end of showDateAndTime
 
 void showCredits()
 {
@@ -708,8 +723,9 @@ void showHelp()
 	cout << " STUFF I DON'T KNOW ";
 }
 
-void endProgram(int lives, int key, vector<Item> zombies)
+void endProgram(int lives, int key, vector<Item> zombies, string name)
 { //end program with appropriate message
+	void writeToSaveFile(string name, int lives);
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
 	Gotoxy(40, 8);
@@ -719,6 +735,7 @@ void endProgram(int lives, int key, vector<Item> zombies)
 		cout << "PLAYER QUITS!          ";
 	if (outOfZombies(zombies))
 		cout << "ALL ZOMBIES DIED!      ";
+	writeToSaveFile(name, lives);
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 9);
@@ -743,3 +760,58 @@ void removePill(vector<Item>& pills, Item sp, string& message, int& pillsRemaini
 		--pillsRemaining;
 		}
 }//end of removePill
+string getPlayerName()
+{
+	string name;
+	const int eraseStart = 19;
+	Gotoxy(10, 20);
+	cout << "Please enter your name (20 Characters) -  ";
+	cin >> name;
+	//Remove any letters above the max characters
+	for (int i = eraseStart; i < name.size(); ++i)
+	{
+		name.erase(i);
+	}
+	return(name);
+}
+int getPlayerScore(string name)
+{
+	int highScore = 0;
+	ifstream fromFile;
+
+	fromFile.open((name + EXTENSION), ios::in);
+
+	if (fromFile.fail())
+	{
+		cout << "ERROR! Unable to read from save file!";
+	}
+	else
+	{
+		if (!fromFile.eof())
+		{
+			fromFile >> highScore;
+		}
+		else
+		{
+			highScore = -1;
+		}
+	}
+	fromFile.close();
+	
+	return(highScore);
+}
+void writeToSaveFile(string name, int lives)
+{
+	ofstream toFile;
+	toFile.open((name + EXTENSION), ios::out);
+
+	if (toFile.fail())
+	{
+		cout << "ERROR! Unable to write save file!";
+	}
+	else
+	{
+		toFile << lives;
+	}
+	toFile.close();
+}//end of writeToSaveFile
