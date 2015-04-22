@@ -341,38 +341,42 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 	int dx(0), dy(0); //The maximum amount the player can move by
 	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
 
+	
 	for (int i = 0; i < zombies.size(); ++i)
 	{
-		displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
-		displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
-
-		if (displaceX != 0 && displaceY != 0)
+		if (zombies[i].isBeingRendered)
 		{
-			//
-			dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
-			dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
-		}
+			displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
+			displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
 
-		const int targetX(zombies[i].x + dx);
-		const int targetY(zombies[i].y + dy);
+			if (displaceX != 0 && displaceY != 0)
+			{
+				//
+				dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
+				dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
+			}
 
-		switch (g[targetY][targetX])
-		{
-		case PILL:
-		case TUNNEL:
-			zombies[i].x += dx;
-			zombies[i].y += dy;
-			break;
-		case HOLE:
-			zombies[i].isBeingRendered = false;
-			break;
-		case ZOMBIE:
-			resetZombiePosition(zombies, i); //Prevent zombie stacking
-			break;
-		case SPOT:
-			--lives;
-			resetZombiePosition(zombies, i);
-			break;
+			const int targetX(zombies[i].x + dx);
+			const int targetY(zombies[i].y + dy);
+
+			switch (g[targetY][targetX])
+			{
+			case PILL:
+			case TUNNEL:
+				zombies[i].x += dx;
+				zombies[i].y += dy;
+				break;
+			case HOLE:
+				zombies[i].isBeingRendered = false;
+				break;
+			case ZOMBIE:
+				resetZombiePosition(zombies, i); //Prevent zombie stacking
+				break;
+			case SPOT:
+				--lives;
+				resetZombiePosition(zombies, i);
+				break;
+			}
 		}
 	}
 
