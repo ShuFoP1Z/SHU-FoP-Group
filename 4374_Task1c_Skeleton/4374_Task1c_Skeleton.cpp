@@ -348,31 +348,47 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 		{
 			displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
 			displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
-
-			if (displaceX != 0 && displaceY != 0)
+			
+			if (displaceX != 0)//If the x displacement isn't 0 
 			{
-				//
-				dx = displaceX / abs(displaceX); //Get the positive or negative direction in the horizontal axis
-				dy = displaceY / abs(displaceY); //Get the positive or negative direction in the vertical axis
+				dx = displaceX / abs(displaceX); //divide the displacement in x by it's absolute value (to give us either +1 or -1 change)
+			}
+			else //if x displacement is 0
+			{
+				dx = 0; //set dx to 0 
 			}
 
-			const int targetX(zombies[i].x + dx);
-			const int targetY(zombies[i].y + dy);
-
+			if (displaceY != 0) //If the y displacement isn't 0
+			{
+				dy = displaceY / abs(displaceY);//divide the displacement in y by it's absolute value (to givve us either +1 or -1 change)
+			}
+			else//if y displacement is 0 
+			{
+				dy = 0; //set dy to 0 
+			}
+			const int targetX(zombies[i].x + dx); //Set the target destination of the zombie's x to it's x position + the new change
+			const int targetY(zombies[i].y + dy);//Set the target destination of the zombie's y to it's y position + the new change
+			
+			//Switch statement check this target location
 			switch (g[targetY][targetX])
 			{
+			//If the location on the grid has a pill, then follow the tunnel behaviour and walk onto the pill
 			case PILL:
 			case TUNNEL:
+				//if it's a tunnel walk into the locaiton
 				zombies[i].x += dx;
 				zombies[i].y += dy;
 				break;
 			case HOLE:
+				//if it's a hole then the zombie is removed from the game render & update loop so it's no longer shown or interacting
 				zombies[i].isBeingRendered = false;
 				break;
 			case ZOMBIE:
+				//If a zombie lands on another zombie, then it must reset it's own poisition
 				resetZombiePosition(zombies, i); //Prevent zombie stacking
 				break;
 			case SPOT:
+				//If the zombie collides with spot it minuses a life from spot then moves back to it's initial position
 				--lives;
 				resetZombiePosition(zombies, i);
 				break;
@@ -383,22 +399,22 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 
 }//end of updateZombieCoordinates
 void resetZombiePosition(vector<Item>& zombies, int arrayIndex)
-{
+{//A function that knows all the start locations of the zombies based on their index in the array
 	switch (arrayIndex)
 	{
-	case 0:
+	case 0://top left
 		zombies[arrayIndex].x = 1;
 		zombies[arrayIndex].y = 1;
 		break;
-	case 1:
+	case 1://bottom left
 		zombies[arrayIndex].x = (SIZEX - 2);
 		zombies[arrayIndex].y = 1;
 		break;
-	case 2:
+	case 2://top right
 		zombies[arrayIndex].x = 1;
 		zombies[arrayIndex].y = (SIZEY - 2);
 		break;
-	case 3:
+	case 3://bottom right
 		zombies[arrayIndex].x = (SIZEX - 2);
 		zombies[arrayIndex].y = (SIZEY - 2);
 		break;
