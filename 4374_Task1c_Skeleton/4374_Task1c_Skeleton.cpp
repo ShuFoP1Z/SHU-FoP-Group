@@ -231,10 +231,19 @@ void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& p
 		pills[i].isBeingRendered = true;					//set the pills to be rendered
 		if (pills[i].y == spot.y && pills[i].x == spot.x)	//if a pill is in the same place as spot
 			--i;											//then decrement i so the pill is moved somewhere else
+		if (i >= 0)
+		{
+			for (int h = 0; h < holes.size(); ++h)						//for every hole
+				if (pills[i].y == holes[h].y && pills[i].x == holes[h].x)	//check if the new pill will be in the same space as a hole
+					--i;
+		}											//if it is remove that pill to create a new one
+		if (i >= 1)
+		{
+			for (int p = 0; p < i; ++p)
+			if (pills[i].y == pills[p].y && pills[i].x == pills[p].x)
+				--i;
+		}
 
-		for (int c = 0; c < holes.size(); ++c)						//for every hole
-			if (pills[i].y == holes[c].y && pills[i].x == holes[c].x)	//check if the new pill will be in the same space as a hole
-				--i;											//if it is remove that pill to create a new one
 	}
 }//end of setPillsInitialCoordinates 
 
