@@ -1,32 +1,36 @@
-﻿Build started 23/04/2015 17:03:52.
+﻿Build started 23/04/2015 19:05:54.
      1>Project "C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Project_VS13.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D _MBCS /D _MBCS /D NODEBUG /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt 4374_Task1c_Skeleton.cpp
          4374_Task1c_Skeleton.cpp
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(209): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(221): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(229): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(240): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(271): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(215): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(227): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(235): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(246): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(277): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(285): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(354): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(387): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(466): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _getch. See online help for details.
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(283): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(291): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(361): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(395): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(476): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _getch. See online help for details.
                  c:\program files (x86)\microsoft visual studio 12.0\vc\include\conio.h(131) : see declaration of 'getch'
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(468): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _getch. See online help for details.
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(478): warning C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name: _getch. See online help for details.
                  c:\program files (x86)\microsoft visual studio 12.0\vc\include\conio.h(131) : see declaration of 'getch'
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(492): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(763): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(778): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(502): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(773): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(789): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(840): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\4374_task1c_skeleton.cpp(846): warning C4018: '<' : signed/unsigned mismatch
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.lib" /MACHINE:X86 Debug\4374_Task1c_Skeleton.obj
          Debug\ConsoleUtils.obj
          Debug\RandomUtils.obj
          Debug\TimeUtils.obj
+         LINK : C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.exe not found or not built by the last incremental link; performing full link
+     1>ConsoleUtils.obj : warning LNK4020: a type record in 'c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\debug\vc120.pdb' is corrupted; some symbols and types may not be accessible from the debugger
          Project_VS13.vcxproj -> C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.exe
      1>Done Building Project "C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Project_VS13.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:03.25
+Time Elapsed 00:00:05.04
