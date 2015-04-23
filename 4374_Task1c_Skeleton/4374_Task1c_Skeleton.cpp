@@ -330,6 +330,8 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		removePill(pills, sp, mess, pillsRemaining);		//remove the pill
 		break;
 	case HOLE:								//can move
+		sp.x += dx; 
+		sp.y += dy;
 		--lives;
 		break;
 	case TUNNEL:
@@ -376,6 +378,23 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 			const int targetX(zombies[i].x + dx); //Set the target destination of the zombie's x to it's x position + the new change
 			const int targetY(zombies[i].y + dy);//Set the target destination of the zombie's y to it's y position + the new change
 			
+			//If spot is in the location the zombie is moving into 
+			if (spot.x == targetX && spot.y == targetY)
+			{	
+				--lives; //Decrement spots lives
+				resetZombiePosition(zombies, i); //reset this zombies position
+			}
+
+			for (int j = 0; j < zombies.size(); ++j)
+			{	
+				//If the index i is not the same as j
+				if (i != j)
+				{
+					//Check and see if another zombie (indexed via j) falls on the location that this one is moving to
+					if (targetX == zombies[j].x && targetY == zombies[j].y)
+						resetZombiePosition(zombies, j);//if so reset the zombie
+				}
+			}
 			//Switch statement check this target location
 			switch (g[targetY][targetX])
 			{
@@ -389,15 +408,6 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 			case HOLE:
 				//if it's a hole then the zombie is removed from the game render & update loop so it's no longer shown or interacting
 				zombies[i].isBeingRendered = false;
-				break;
-			case ZOMBIE:
-				//If a zombie lands on another zombie, then it must reset it's own poisition
-				resetZombiePosition(zombies, i); //Prevent zombie stacking
-				break;
-			case SPOT:
-				//If the zombie collides with spot it minuses a life from spot then moves back to it's initial position
-				--lives;
-				resetZombiePosition(zombies, i);
 				break;
 			}
 		}
