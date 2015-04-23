@@ -119,23 +119,23 @@ void playGame()
 	Item zombie = { ZOMBIE };								//Zombies symbol and position (0, 0)
 	vector<Item> zombies(4, zombie);				     	//Initialise a vector of zombies, each element will be initialised as zombie
 
-	string message("LET'S START...      ");					//current message to player
+	string message("         LET'S START...          ");	//current message to player
 
 	bool running = true;
 
 	//action...
 
-	initialiseGame(grid, spot, holes, pills, zombies);						//initialise grid (incl. walls and spot)
+	initialiseGame(grid, spot, holes, pills, zombies);		//initialise grid (incl. walls and spot)
 
 	int key(' ');											//create key to store keyboard events
 	do {
 		renderGame(grid, message, lives);					//render game state on screen
-		message = "                    ";					//reset message
+		message = "                                 ";		//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies);
 		else
-			message = "INVALID KEY!        ";				//set 'Invalid key' message
+			message = "          INVALID KEY!           ";	//set 'Invalid key' message
 
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
@@ -324,6 +324,8 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	case HOLE:								//can move
 		--lives;
+		sp.y += dy;							//go in that Y direction
+		sp.x += dx;							//go in that X direction
 		break;
 	case TUNNEL:
 		sp.y += dy;							//go in that Y direction
@@ -331,7 +333,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		break;
 	case WALL:								//hit a wall and stay there
 		cout << '\a';						//beep the alarm
-		mess = "CANNOT GO THERE!    ";
+		mess = "       CANNOT GO THERE...        ";
 		break;
 	}
 } //end of updateSpotCoordinates
@@ -472,6 +474,7 @@ bool outOfLives(int lives)
 	else
 		return true;
 } //end of outOfLives
+
 bool outOfZombies(vector<Item> zombies)
 {//Check if all the zombies have died
 	int counter = 0;
@@ -710,18 +713,19 @@ void showHelp()
 
 void endProgram(int lives, int key, vector<Item> zombies)
 { //end program with appropriate message
-	SelectBackColour(clBlack);
-	SelectTextColour(clYellow);
-	Gotoxy(40, 8);
+	SelectBackColour(clBlue);
+	SelectTextColour(clWhite);
+	Gotoxy(40, 13);
 	if (outOfLives(lives))
-		cout << "YOU LOST!              ";
+		cout << "            YOU LOST!            ";
 	if (wantToQuit(key))
-		cout << "PLAYER QUITS!          ";
+		cout << "          PLAYER QUITS!          ";
 	if (outOfZombies(zombies))
-		cout << "ALL ZOMBIES DIED!      ";
+		cout << "        ALL ZOMBIES DIED!        ";
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
-	Gotoxy(40, 9);
+	Gotoxy(40, 14);
+	cout << " ";
 	system("pause");
 } //end of endProgram
 
