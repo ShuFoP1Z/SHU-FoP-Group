@@ -178,8 +178,8 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
-	void setHoleInitialCoordinates(vector<Item>& holes, Item& spot);
-	void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills);
+	void setHoleInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& zombies);
+	void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills,  vector<Item>& zombies);
 	void placeSpot(char gr[][SIZEX], Item spot);
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
 	void placePills(char gr[][SIZEX], vector<Item> pills);
@@ -193,15 +193,18 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 
 	//do while?
 	setGrid(grid);											//reset empty grid
-	setSpotInitialCoordinates(spot);						//initialise spot position
-	placeSpot(grid, spot);									//set spot in grid
-	setHoleInitialCoordinates(holes, spot);					//intiialise holes position
-	placeHoles(grid, holes);								//set holes in grid
-	setPillsInitialCoordinates(holes, spot, pills);			//initialise pills position
-	placePills(grid, pills);								//set pills in grid
 
 	setZombieInitialCoordinates(zombies);					//setup the positions of each zombie
 	placeZombies(grid, zombies);							//place the zombies in the grid
+
+	setSpotInitialCoordinates(spot);						//initialise spot position
+	placeSpot(grid, spot);									//set spot in grid
+
+	setHoleInitialCoordinates(holes, spot, zombies);					//intiialise holes position
+	placeHoles(grid, holes);								//set holes in grid
+
+	setPillsInitialCoordinates(holes, spot, pills, zombies);			//initialise pills position
+	placePills(grid, pills);								//set pills in grid
 } //end of initialiseGame
 
 void setSpotInitialCoordinates(Item& spot)
@@ -210,40 +213,62 @@ void setSpotInitialCoordinates(Item& spot)
 	spot.x = Random(SIZEX - 2);								//horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialCoordinates
 
-void setHoleInitialCoordinates(vector<Item>& holes, Item& spot)
+void setHoleInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& zombies)
 { //set hole coordinates inside the grid at random at beginning of game
+	bool taken;
 	for (int i = 0; i < holes.size(); ++i)
 	{
+		taken = false;
 		holes[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		holes[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
 
 		if (holes[i].y == spot.y && holes[i].x == spot.x)	//if a hole is in the same place as spot
-			--i;											//then decrement i so the hole is moved somewhere else
+			taken = true;											//then decrement i so the hole is moved somewhere else
+		for (int z = 0; z < zombies.size(); ++z)						//for every hole
+			if (zombies[z].y == holes[i].y && zombies[z].x == holes[i].x)	//check if the new pill will be in the same space as a hole
+				taken = true;
+		if (i >= 1)
+		{
+			for (int h = 0; h < i; ++h)
+				if (holes[i].y == holes[h].y && holes[i].x == holes[h].x)
+					taken = true;
+		}
+		if (taken == true)
+			i--;
 	}
 } //end of setHoleInitialCoordinates
 
-void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills)
+void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills, vector<Item>& zombies)
 { //set the pills coordinates inside the grid randomly at the beginning of a game, checking theyre not on a taken space)
+	bool taken;
 	for (int i = 0; i < pills.size(); ++i)
 	{
+		taken = false;
 		pills[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		pills[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
 		pills[i].isBeingRendered = true;					//set the pills to be rendered
 		if (pills[i].y == spot.y && pills[i].x == spot.x)	//if a pill is in the same place as spot
-			--i;											//then decrement i so the pill is moved somewhere else
+			taken = true;											//then decrement i so the pill is moved somewhere else
 		if (i >= 0)
 		{
 			for (int h = 0; h < holes.size(); ++h)						//for every hole
 				if (pills[i].y == holes[h].y && pills[i].x == holes[h].x)	//check if the new pill will be in the same space as a hole
-					--i;
+					taken = true;
 		}											//if it is remove that pill to create a new one
+		if (i >= 0)
+		{
+			for (int z = 0; z < zombies.size(); ++z)						//for every hole
+			if (pills[i].y == zombies[z].y && pills[i].x == zombies[z].x)	//check if the new pill will be in the same space as a hole
+				taken = true;
+		}
 		if (i >= 1)
 		{
 			for (int p = 0; p < i; ++p)
 			if (pills[i].y == pills[p].y && pills[i].x == pills[p].x)
-				--i;
+				taken = true;
 		}
-
+		if (taken == true)
+			i--;
 	}
 }//end of setPillsInitialCoordinates 
 
