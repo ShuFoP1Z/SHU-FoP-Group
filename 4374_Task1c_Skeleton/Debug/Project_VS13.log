@@ -1,4 +1,4 @@
-﻿Build started 23/04/2015 19:05:54.
+﻿Build started 23/04/2015 21:23:54.
      1>Project "C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Project_VS13.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D _MBCS /D _MBCS /D NODEBUG /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /GR /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt 4374_Task1c_Skeleton.cpp
@@ -26,11 +26,9 @@
          Debug\ConsoleUtils.obj
          Debug\RandomUtils.obj
          Debug\TimeUtils.obj
-         LINK : C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.exe not found or not built by the last incremental link; performing full link
-     1>ConsoleUtils.obj : warning LNK4020: a type record in 'c:\users\masimba\documents\github\shu-fop-group\4374_task1c_skeleton\debug\vc120.pdb' is corrupted; some symbols and types may not be accessible from the debugger
          Project_VS13.vcxproj -> C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Debug\Project_VS13.exe
      1>Done Building Project "C:\Users\Masimba\Documents\GitHub\SHU-FoP-Group\4374_Task1c_Skeleton\Project_VS13.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:05.04
+Time Elapsed 00:00:06.22
