@@ -77,8 +77,10 @@ int main()
 		key = getKeyPress();								//read in next keyboard event
 		//game
 		if (toupper(key) == PLAY)
+		{
 			playerName = getPlayerName();
-			playGame(playerName);										//run the game
+			playGame(playerName);							//run the game
+		}
 		//quit
 		if (wantToQuit(key))
 		{
@@ -121,7 +123,7 @@ void playGame(string playerName)
 	char grid[SIZEY][SIZEX];								//grid for display
 	int lives(3);											//The number of lives spot has
 	int pillsRemaining(5);									//The number of pills still being shown
-	const int highScore = getPlayerScore(playerName);					//get the players highest score
+	const int highScore = getPlayerScore(playerName);		//get the players highest score
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
 	bool frozen(false);
@@ -143,12 +145,12 @@ void playGame(string playerName)
 	int key(' ');											//create key to store keyboard events
 	do {
 		renderGame(grid, message, lives, playerName, highScore);					//render game state on screen
-		message = "                    ";					//reset message
+		message = "                                 ";		//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies, frozen);
 		else
-			message = "INVALID KEY!        ";				//set 'Invalid key' message
+			message = "          INVALID KEY!           ";	//set 'Invalid key' message
 		cheats(lives, zombies, pills, key, frozen);			//see if there are cheats
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
@@ -370,11 +372,9 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		removePill(pills, sp, mess, pillsRemaining);		//remove the pill
 		break;
 	case HOLE:								//can move
-		sp.x += dx; 
-		sp.y += dy;
-		--lives;
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
+		--lives;
 		break;
 	case TUNNEL:
 		sp.y += dy;							//go in that Y direction
@@ -553,16 +553,12 @@ void displayMenu()
 	void showCredits();
 	void showInfo();
 	
-
 	SelectBackColour(clBlack);
 	Clrscr();
-
 	showMenuTitle();
 	showDateAndTime();
 	showCredits();
-	//showScore thing
 	showInfo();
-
 }
 void displayInfo()
 {
@@ -603,24 +599,44 @@ void renderGame(const char gd[][SIZEX], string mess, int lives, string playerNam
 
 void paintGrid(const char g[][SIZEX])
 { //display grid content on screen
-	SelectBackColour(clBlack);
-	SelectTextColour(clWhite);
-	Gotoxy(10, 4);
+	SelectBackColour(clDarkGrey);
+	int line(4);
+	Gotoxy(10, line);
 	for (int row(0); row < SIZEY; ++row)		//for each row (vertically)
 	{
 		for (int col(0); col < SIZEX; ++col)	//for each column (horizontally)
 		{
+			bool insideWall;
+			if (g[row][col] == SPOT)
+				SelectTextColour(clRed);
+			if (g[row][col] == PILL)
+				SelectTextColour(clCyan);
+			if (g[row][col] == ZOMBIE)
+				SelectTextColour(clGreen);
+			if (g[row][col] == HOLE)
+				SelectTextColour(clBlack);
+			if (g[row][col] == WALL)
+			{
+				SelectTextColour(clWhite);
+				SelectBackColour(clBlack);
+			}
 			cout << g[row][col];				//output cell content
+			SelectBackColour(clDarkGrey);
 		} //end of col-loop
-		cout << endl << "          ";
+		++line;
+		Gotoxy(10, line);
+		//cout << endl << "          ";
 	} //end of row-loop
 } //end of paintGrid
+
 void showPlayerScore(string playerName, int highScore)
 {
-	Gotoxy(40, 16);
-	cout << "Name - " << playerName << endl;
-	Gotoxy(40, 17); 
-	cout << "Score - " << highScore << endl;
+	SelectBackColour(clBlue);
+	SelectTextColour(clCyan);
+	Gotoxy(10, 17);
+	cout << " NAME - " << playerName << " ";
+	Gotoxy(40, 17);
+	cout << " SCORE - " << highScore << " ";
 }
 void showMessage(string m, int lives)
 { //print auxiliary messages if any
@@ -695,8 +711,6 @@ void showCredits()
 	cout << " Valve Corporation) ";
 }
 
-//void showScoreEntry() (Start line on Gotoxy(10, 17))
-
 void showInfo()
 {
 	SelectBackColour(clDarkMagenta);
@@ -770,26 +784,28 @@ void showHelp()
 	Gotoxy(10, 11);
 	cout << " - Avoid Holes      ";
 	Gotoxy(10, 13);
-	cout << " YOUR SCORE IS MADE ";
+	cout << " YOUR SCORE  IS THE ";
 	Gotoxy(10, 14);
-	cout << " BY CALCULATING DIS ";
+	cout << "NUMBER OF LIVES LEFT";
 	Gotoxy(10, 15);
-	cout << " STUFF I DON'T KNOW ";
+	cout << " WHEN THE GAME ENDS ";
 }
-
+/*
+YOUR SCORE IS THE NUMBER OF LIVES LEFT WHEN THE GAME ENDS
+*/
 void endProgram(int lives, int key, vector<Item> zombies, string name)
 { //end program with appropriate 
 	void writeToSaveFile(string name, int lives);
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
-	Gotoxy(40, 8);
+	Gotoxy(40, 13);
 
 	if (outOfLives(lives))
 		cout << "            YOU LOST!            ";
 	if (wantToQuit(key))
 		cout << "          PLAYER QUITS!          ";
 	if (outOfZombies(zombies))
-		cout << "ALL ZOMBIES DIED!				  ";
+		cout << "        ALL ZOMBIES DIED!        ";
 	writeToSaveFile(name, lives);
 
 	//If zombies are not being rendered
@@ -811,10 +827,10 @@ void displayExit()
 void removePill(vector<Item>& pills, Item sp, string& message, int& pillsRemaining)
 {
 	for (int i = 0; i < pills.size(); i++)					//for every pill
-		if (pills[i].x == sp.x && pills[i].y == sp.y)			//check if the pills coordinates equal spots coordinates
+		if (pills[i].x == sp.x && pills[i].y == sp.y)		//check if the pills coordinates equal spots coordinates
 		{
-		pills[i].isBeingRendered = false;					//if they do, no longer draw that pill
-		--pillsRemaining;
+			pills[i].isBeingRendered = false;				//if they do, no longer draw that pill
+			--pillsRemaining;
 		}
 }//end of removePill
 
@@ -822,8 +838,8 @@ string getPlayerName()
 {
 	string name;
 	const int eraseStart = 19;
-	Gotoxy(10, 20);
-	cout << "Please enter your name (20 Characters) -  ";
+	Gotoxy(10, 17);
+	cout << "Please enter your name (20 Characters) - ";
 	cin >> name;
 	//Remove any letters above the max characters
 	for (int i = eraseStart; i < name.size(); ++i)
