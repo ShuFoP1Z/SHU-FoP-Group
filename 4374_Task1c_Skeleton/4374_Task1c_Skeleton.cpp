@@ -8,13 +8,13 @@
 #include <string>							//for string
 #include <vector>							//for vectors
 #include <fstream>							//for ofstream & ifstream
-using namespace std;
+
 
 //include our own libraries
 #include "RandomUtils.h"					//for Seed, Random
 #include "ConsoleUtils.h"					//for Clrscr, Gotoxy, etc.
 #include "TimeUtils.h"						//for GetTime, GetDate
-
+using namespace std;
 //---------------------------------
 //define constants
 //---------------------------------
@@ -80,7 +80,7 @@ int main()
 			playerName = getPlayerName();
 			playGame(playerName);
 		}//run the game
-		//quit
+
 		if (wantToQuit(key))
 		{
 			displayExit();									//display the exit message
@@ -180,8 +180,8 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
-	void setHoleInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& zombies);
-	void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills,  vector<Item>& zombies);
+	void setHoleInitialCoordinates(vector<Item>& holes, char gr[][SIZEX]);
+	void setPillsInitialCoordinates(vector<Item>& pills, char gr[][SIZEX]);
 	void placeSpot(char gr[][SIZEX], Item spot);
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
 	void placePills(char gr[][SIZEX], vector<Item> pills);
@@ -202,10 +202,10 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<
 	setSpotInitialCoordinates(spot);						//initialise spot position
 	placeSpot(grid, spot);									//set spot in grid
 
-	setHoleInitialCoordinates(holes, spot, zombies);					//intiialise holes position
+	setHoleInitialCoordinates(holes, grid);					//intiialise holes position
 	placeHoles(grid, holes);								//set holes in grid
 
-	setPillsInitialCoordinates(holes, spot, pills, zombies);			//initialise pills position
+	setPillsInitialCoordinates(pills, grid);			//initialise pills position
 	placePills(grid, pills);								//set pills in grid
 } //end of initialiseGame
 
@@ -215,7 +215,7 @@ void setSpotInitialCoordinates(Item& spot)
 	spot.x = Random(SIZEX - 2);								//horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialCoordinates
 
-void setHoleInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& zombies)
+void setHoleInitialCoordinates(vector<Item>& holes, char gr[][SIZEX])
 { //set hole coordinates inside the grid at random at beginning of game
 	bool taken;
 	for (int i = 0; i < holes.size(); ++i)
@@ -224,23 +224,19 @@ void setHoleInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& zo
 		holes[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		holes[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
 
-		if (holes[i].y == spot.y && holes[i].x == spot.x)	//if a hole is in the same place as spot
-			taken = true;											//then decrement i so the hole is moved somewhere else
-		for (int z = 0; z < zombies.size(); ++z)						//for every hole
-			if (zombies[z].y == holes[i].y && zombies[z].x == holes[i].x)	//check if the new pill will be in the same space as a hole
+		if (gr[holes[i].y][holes[i].x] != TUNNEL)
+			taken = true;
+
+		for (int h = 0; h < i; ++h)
+			if (holes[i].y == holes[h].y && holes[i].x == holes[h].x)
 				taken = true;
-		if (i >= 1)
-		{
-			for (int h = 0; h < i; ++h)
-				if (holes[i].y == holes[h].y && holes[i].x == holes[h].x)
-					taken = true;
-		}
+
 		if (taken == true)
 			i--;
 	}
 } //end of setHoleInitialCoordinates
 
-void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& pills, vector<Item>& zombies)
+void setPillsInitialCoordinates(vector<Item>& pills, char gr[][SIZEX])
 { //set the pills coordinates inside the grid randomly at the beginning of a game, checking theyre not on a taken space)
 	bool taken;
 	for (int i = 0; i < pills.size(); ++i)
@@ -249,31 +245,18 @@ void setPillsInitialCoordinates(vector<Item>& holes, Item& spot, vector<Item>& p
 		pills[i].y = Random(SIZEY - 2);						//vertical coordinate in range [1..(SIZEY - 2)]
 		pills[i].x = Random(SIZEX - 2);						//horizontal coordinate in range [1..(SIZEX - 2)]
 		pills[i].isBeingRendered = true;					//set the pills to be rendered
-		if (pills[i].y == spot.y && pills[i].x == spot.x)	//if a pill is in the same place as spot
-			taken = true;											//then decrement i so the pill is moved somewhere else
-		if (i >= 0)
-		{
-			for (int h = 0; h < holes.size(); ++h)						//for every hole
-				if (pills[i].y == holes[h].y && pills[i].x == holes[h].x)	//check if the new pill will be in the same space as a hole
-					taken = true;
-		}											//if it is remove that pill to create a new one
-		if (i >= 0)
-		{
-			for (int z = 0; z < zombies.size(); ++z)						//for every hole
-				if (pills[i].y == zombies[z].y && pills[i].x == zombies[z].x)	//check if the new pill will be in the same space as a hole
-					taken = true;
-		}
-		if (i >= 1)
-		{
-			for (int p = 0; p < i; ++p)
-				if (pills[i].y == pills[p].y && pills[i].x == pills[p].x)
-					taken = true;
-		}
+
+		if (gr[pills[i].y][pills[i].x] != TUNNEL)
+			taken = true;
+
+		for (int p = 0; p < i; ++p)
+			if (pills[i].y == pills[p].y && pills[i].x == pills[p].x)
+				taken = true;
+
 		if (taken == true)
 			i--;
 	}
 }//end of setPillsInitialCoordinates 
-
 void setZombieInitialCoordinates(vector<Item>& zombies)
 {
 	//Will set up all 4 zombies to spawn in a corner
@@ -372,6 +355,8 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		removePill(pills, sp, mess, pillsRemaining);		//remove the pill
 		break;
 	case HOLE:								//can move
+		sp.x += dx; 
+		sp.y += dy;
 		--lives;
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
@@ -381,7 +366,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		sp.x += dx;							//go in that X direction
 		break;
 	case WALL:								//hit a wall and stay there
-		cout << '\a';						//beep the alarm
+		std::cout << '\a';						//beep the alarm
 		mess = "       CANNOT GO THERE...        ";
 		break;
 	}
@@ -617,9 +602,9 @@ void paintGrid(const char g[][SIZEX])
 	{
 		for (int col(0); col < SIZEX; ++col)	//for each column (horizontally)
 		{
-			cout << g[row][col];				//output cell content
+			std::cout << g[row][col];				//output cell content
 		} //end of col-loop
-		cout << endl << "          ";
+		std::cout << endl << "          ";
 	} //end of row-loop
 } //end of paintGrid
 void showPlayerScore(string playerName, int highScore)
@@ -784,6 +769,7 @@ void showHelp()
 	cout << " STUFF I DON'T KNOW ";
 }
 
+
 void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining, string name, int highscore)
 { //end program with appropriate 
 	void writeToSaveFile(string name, int lives, int highscore);
@@ -803,7 +789,7 @@ void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining, st
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 14);
-	//cout << " ";
+	cout << " ";
 	system("pause");
 } //end of endProgram
 
@@ -843,6 +829,7 @@ string getPlayerName()
 int getPlayerScore(string name)
 {
 	int highScore = 0; //Where the players highest score will be stored
+
 	ifstream fromFile;
 
 	fromFile.open((name + EXTENSION), ios::in);
@@ -850,7 +837,7 @@ int getPlayerScore(string name)
 	if (fromFile.fail())//If the file failed to open
 	{
 		//print an error to the screen
-		cout << "ERROR! Unable to read from save file!";
+		std::cout << "ERROR! Unable to read from save file!";
 	}
 	else
 	{
@@ -880,6 +867,7 @@ void writeToSaveFile(string name, int lives, int highscore)
 	{
 		if (lives > highscore)
 			toFile << lives;
+		toFile << lives;
 	}
 	toFile.close();
 }//end of writeToSaveFile
