@@ -144,7 +144,7 @@ void playGame(string playerName)
 	int key(' ');											//create key to store keyboard events
 	do {
 		renderGame(grid, message, lives, playerName, highscore);					//render game state on screen
-		message = "                    ";					//reset message
+		message = "                                 ";		//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies, frozen);
