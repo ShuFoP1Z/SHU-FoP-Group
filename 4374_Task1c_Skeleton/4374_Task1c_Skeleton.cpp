@@ -325,8 +325,8 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes, vector<Item> 
 	void placeZombies(char g[][SIZEX], vector<Item> zombies);
 
 	setGrid(grid);							//reset empty grid
-	//placeHoles(grid, holes);				//set holes in grid
-	//placePills(grid, pills);				//set pills in grid
+	placeHoles(grid, holes);				//set holes in grid
+	placePills(grid, pills);				//set pills in grid
 	placeSpot(grid, spot);					//set spot in grid
 	placeZombies(grid, zombies);			//set zombies in the grid
 } //end of updateGrid
