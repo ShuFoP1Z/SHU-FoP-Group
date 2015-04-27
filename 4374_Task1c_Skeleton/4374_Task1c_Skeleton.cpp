@@ -420,6 +420,8 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 						{
 							resetZombiePosition(zombies, j);//if so reset the zombie
 							resetZombiePosition(zombies, i);//and reset the other one
+							dx = 0; 
+							dy = 0;
 						}
 					}
 				}
