@@ -76,9 +76,10 @@ int main()
 		displayMenu();										//display the main menu
 		key = getKeyPress();								//read in next keyboard event
 		//game
-		if (toupper(key) == PLAY)
+		if (toupper(key) == PLAY){
 			playerName = getPlayerName();
-			playGame(playerName);										//run the game
+			playGame(playerName);
+		}//run the game
 		//quit
 		if (wantToQuit(key))
 		{
@@ -109,10 +110,11 @@ void playGame(string playerName)
 	bool isArrowKey(int k);
 	bool outOfLives(int lives);
 	bool outOfZombies(vector<Item> zombies);
+	bool outOfPills(int pillsRemaining);
 	int  getKeyPress();
 	void updateGame(char g[][SIZEX], Item& sp, vector<Item> holes, int k, int& lives, string& mess, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies, bool frozen);
 	void renderGame(const char g[][SIZEX], string mess, int lives, string playerName, int highScore);
-	void endProgram(int lives, int key, vector<Item>zombies, string name);
+	void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining ,string name, int highscore);
 	int getPlayerScore(string name);
 	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen);
 
@@ -121,7 +123,7 @@ void playGame(string playerName)
 	char grid[SIZEY][SIZEX];								//grid for display
 	int lives(3);											//The number of lives spot has
 	int pillsRemaining(5);									//The number of pills still being shown
-	const int highScore = getPlayerScore(playerName);					//get the players highest score
+	const int highscore = getPlayerScore(playerName);					//get the players highest score
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
 	bool frozen(false);
@@ -142,7 +144,7 @@ void playGame(string playerName)
 
 	int key(' ');											//create key to store keyboard events
 	do {
-		renderGame(grid, message, lives, playerName, highScore);					//render game state on screen
+		renderGame(grid, message, lives, playerName, highscore);					//render game state on screen
 		message = "                    ";					//reset message
 		key = getKeyPress();								//read in next keyboard event
 		if (isArrowKey(key))
@@ -154,11 +156,11 @@ void playGame(string playerName)
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
 			running = false;
-		if (outOfZombies(zombies))							//if all the zombies are dead
+		if (outOfZombies(zombies) && outOfPills(pillsRemaining))							//if all the zombies are dead
 			running = false;
 	} while (running);
 
-	endProgram(lives, key, zombies, playerName);
+	endProgram(lives, key, zombies, pillsRemaining, playerName, highscore);
 }
 
 void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int& lives, string& message, vector<Item>& pills, int& pillsRemaining, vector<Item>& zombies, bool frozen)
@@ -340,8 +342,8 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> holes, vector<Item> 
 	void placeZombies(char g[][SIZEX], vector<Item> zombies);
 
 	setGrid(grid);							//reset empty grid
-	placeHoles(grid, holes);				//set holes in grid
-	placePills(grid, pills);				//set pills in grid
+	//placeHoles(grid, holes);				//set holes in grid
+	//placePills(grid, pills);				//set pills in grid
 	placeSpot(grid, spot);					//set spot in grid
 	placeZombies(grid, zombies);			//set zombies in the grid
 } //end of updateGrid
@@ -370,8 +372,6 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, int& lives,
 		removePill(pills, sp, mess, pillsRemaining);		//remove the pill
 		break;
 	case HOLE:								//can move
-		sp.x += dx; 
-		sp.y += dy;
 		--lives;
 		sp.y += dy;							//go in that Y direction
 		sp.x += dx;							//go in that X direction
@@ -435,7 +435,10 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 					{
 						//Check and see if another zombie (indexed via j) falls on the location that this one is moving to
 						if (targetX == zombies[j].x && targetY == zombies[j].y)
+						{
 							resetZombiePosition(zombies, j);//if so reset the zombie
+							resetZombiePosition(zombies, i);//and reset the other one
+						}
 					}
 				}
 				//Switch statement check this target location
@@ -541,8 +544,12 @@ bool outOfZombies(vector<Item> zombies)
 		if (!zombies[i].isBeingRendered)
 			++counter;
 	}
-	return(counter == 4);
+	return(counter == zombies.size() );
 }//end outOfZombies
+bool outOfPills(int pillsremaining)
+{
+	return(pillsremaining == 0);//if there are pills return false, else return true
+}//end of outOfPills
 //---------------------------------------------------------------------------
 //----- display info on screen
 //---------------------------------------------------------------------------
@@ -777,9 +784,9 @@ void showHelp()
 	cout << " STUFF I DON'T KNOW ";
 }
 
-void endProgram(int lives, int key, vector<Item> zombies, string name)
+void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining, string name, int highscore)
 { //end program with appropriate 
-	void writeToSaveFile(string name, int lives);
+	void writeToSaveFile(string name, int lives, int highscore);
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
 	Gotoxy(40, 8);
@@ -788,14 +795,15 @@ void endProgram(int lives, int key, vector<Item> zombies, string name)
 		cout << "            YOU LOST!            ";
 	if (wantToQuit(key))
 		cout << "          PLAYER QUITS!          ";
-	if (outOfZombies(zombies))
-		cout << "ALL ZOMBIES DIED!				  ";
-	writeToSaveFile(name, lives);
-
+	if (outOfZombies(zombies) && outOfPills(pillsRemaining))
+	{
+		cout << "         ALL ZOMBIES DIED!	      ";
+	}
+	writeToSaveFile(name, lives, highscore);
 	//If zombies are not being rendered
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 14);
-	cout << " ";
+	//cout << " ";
 	system("pause");
 } //end of endProgram
 
@@ -834,31 +842,32 @@ string getPlayerName()
 }
 int getPlayerScore(string name)
 {
-	int highScore = 0;
+	int highScore = 0; //Where the players highest score will be stored
 	ifstream fromFile;
 
 	fromFile.open((name + EXTENSION), ios::in);
 
-	if (fromFile.fail())
+	if (fromFile.fail())//If the file failed to open
 	{
+		//print an error to the screen
 		cout << "ERROR! Unable to read from save file!";
 	}
 	else
 	{
-		if (!fromFile.eof())
+		if (!fromFile.eof())//If not at the end of the file
 		{
-			fromFile >> highScore;
+			fromFile >> highScore;//read the score
 		}
-		else
+		else//else if there is no score
 		{
-			highScore = -1;
+			highScore = -1;//set highest score to -1
 		}
 	}
-	fromFile.close();
+	fromFile.close();//close the file
 	
-	return(highScore);
+	return(highScore); //return the value of highest score
 }
-void writeToSaveFile(string name, int lives)
+void writeToSaveFile(string name, int lives, int highscore)
 {
 	ofstream toFile;
 	toFile.open((name + EXTENSION), ios::out);
@@ -869,7 +878,8 @@ void writeToSaveFile(string name, int lives)
 	}
 	else
 	{
-		toFile << lives;
+		if (lives > highscore)
+			toFile << lives;
 	}
 	toFile.close();
 }//end of writeToSaveFile
