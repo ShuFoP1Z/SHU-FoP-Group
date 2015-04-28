@@ -403,8 +403,8 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 				{
 					dy = 0; //set dy to 0 
 				}
-				const int targetX(zombies[i].x + dx); //Set the target destination of the zombie's x to it's x position + the new change
-				const int targetY(zombies[i].y + dy);//Set the target destination of the zombie's y to it's y position + the new change
+				int targetX(zombies[i].x + dx); //Set the target destination of the zombie's x to it's x position + the new change
+				int targetY(zombies[i].y + dy);//Set the target destination of the zombie's y to it's y position + the new change
 
 				//If spot is in the location the zombie is moving into 
 				if (spot.x == targetX && spot.y == targetY)
@@ -423,8 +423,8 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 						{
 							resetZombiePosition(zombies, j);//if so reset the zombie
 							resetZombiePosition(zombies, i);//and reset the other one
-							dx = 0; 
-							dy = 0;
+							targetX = zombies[i].x;	//Set the target position of this zombie to it's own position to avoid wall glitches
+							targetY = zombies[i].y; //Set the target position of this zombie to it's own position to avoid wall glitches
 						}
 					}
 				}
