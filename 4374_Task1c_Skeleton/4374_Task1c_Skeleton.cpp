@@ -115,7 +115,7 @@ void playGame(string playerName)
 	void renderGame(const char g[][SIZEX], string mess, int lives, string playerName, int highScore);
 	void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining ,string name, int highscore);
 	int getPlayerScore(string name);
-	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining);
+	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining, bool& exterminate);
 
 
 	//local variable declarations 
@@ -126,7 +126,7 @@ void playGame(string playerName)
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
 	bool frozen(false);
-
+	bool exterminate(false);
 	Item pill = { PILL };									//Pill's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
 	vector <Item> pills(5, pill);							//Creates a vector of pills, with each element being initialised as pills
@@ -149,12 +149,11 @@ void playGame(string playerName)
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies, frozen);
 		else
-		{
-			if (toupper(key) != FREEZE && toupper(key) != EXTERMINATE && toupper(key) != EAT)
-				message = "          INVALID KEY!           ";	//set 'Invalid key' message
-		}
-			
-		cheats(lives, zombies, pills, key, frozen, pillsRemaining);			//see if there are cheats
+		if (toupper(key) == FREEZE || toupper(key) == EXTERMINATE || toupper(key) == EAT) //see if there are cheats
+			cheats(lives, zombies, pills, key, frozen, pillsRemaining, exterminate);
+		else 
+			message = "          INVALID KEY!           ";	//set 'Invalid key' message
+
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
@@ -889,7 +888,7 @@ void writeToSaveFile(string name, int lives, int highscore)
 	}
 	toFile.close();
 }//end of writeToSaveFile
-void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining)
+void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining, bool& exterminate)
 {
 	if (toupper(key) == EAT)
 	{
@@ -900,8 +899,22 @@ void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, boo
 
 	if (toupper(key) == EXTERMINATE)
 	{
-		for (int i = 0; i < zombies.size(); ++i)
-			zombies[i].isBeingRendered = false;
+		if (exterminate == false)
+		{
+			for (int i = 0; i < zombies.size(); ++i)
+				zombies[i].isBeingRendered = false;
+			exterminate = true;
+		}
+		else
+		{
+			for (int i = 0; i < zombies.size(); ++i)
+			{
+				resetZombiePosition(zombies, i);
+				zombies[i].isBeingRendered = true;
+			}
+			exterminate = false;
+		}
+
 	}
 
 	if (toupper(key) == FREEZE)
