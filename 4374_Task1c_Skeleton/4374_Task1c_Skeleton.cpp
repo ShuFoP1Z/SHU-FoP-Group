@@ -115,7 +115,7 @@ void playGame(string playerName)
 	void renderGame(const char g[][SIZEX], string mess, int lives, string playerName, int highScore);
 	void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining ,string name, int highscore);
 	int getPlayerScore(string name);
-	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen);
+	void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining);
 
 
 	//local variable declarations 
@@ -154,7 +154,7 @@ void playGame(string playerName)
 				message = "          INVALID KEY!           ";	//set 'Invalid key' message
 		}
 			
-		cheats(lives, zombies, pills, key, frozen);			//see if there are cheats
+		cheats(lives, zombies, pills, key, frozen, pillsRemaining);			//see if there are cheats
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
 		if (outOfLives(lives))								//if player is out of lives
@@ -889,12 +889,13 @@ void writeToSaveFile(string name, int lives, int highscore)
 	}
 	toFile.close();
 }//end of writeToSaveFile
-void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen)
+void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, bool& frozen, int& pillsRemaining)
 {
 	if (toupper(key) == EAT)
 	{
 		for (int i = 0; i < pills.size(); ++i)
 			pills[i].isBeingRendered = false;
+		pillsRemaining = 0;
 	}
 
 	if (toupper(key) == EXTERMINATE)
