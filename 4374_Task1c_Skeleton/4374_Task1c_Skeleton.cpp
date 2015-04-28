@@ -181,40 +181,47 @@ void updateGame(char grid[][SIZEX], Item& spot, vector<Item> holes, int key, int
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
-	void setSpotInitialCoordinates(Item& spot);
+	void setSpotInitialCoordinates(Item& spot, char gr[][SIZEX]);
 	void setHoleInitialCoordinates(vector<Item>& holes, char gr[][SIZEX]);
 	void setPillsInitialCoordinates(vector<Item>& pills, char gr[][SIZEX]);
-	void placeSpot(char gr[][SIZEX], Item spot);
-	void placeHoles(char gr[][SIZEX], vector<Item> holes);
-	void placePills(char gr[][SIZEX], vector<Item> pills);
-
 	void setZombieInitialCoordinates(vector<Item>& zombies);
 	void placeSpot(char gr[][SIZEX], Item spot);
 	void placeHoles(char gr[][SIZEX], vector<Item> holes);
+	void placePills(char gr[][SIZEX], vector<Item> pills);
 	void placeZombies(char gr[][SIZEX], vector<Item> zombies);
 
 	Seed();													//seed random number generator
-
-	//do while?
 	setGrid(grid);											//reset empty grid
 
 	setZombieInitialCoordinates(zombies);					//setup the positions of each zombie
 	placeZombies(grid, zombies);							//place the zombies in the grid
 
-	setSpotInitialCoordinates(spot);						//initialise spot position
+	setSpotInitialCoordinates(spot, grid);					//initialise spot position
 	placeSpot(grid, spot);									//set spot in grid
 
 	setHoleInitialCoordinates(holes, grid);					//intiialise holes position
 	placeHoles(grid, holes);								//set holes in grid
 
-	setPillsInitialCoordinates(pills, grid);			//initialise pills position
+	setPillsInitialCoordinates(pills, grid);				//initialise pills position
 	placePills(grid, pills);								//set pills in grid
 } //end of initialiseGame
 
-void setSpotInitialCoordinates(Item& spot)
+void setSpotInitialCoordinates(Item& spot, char gr[][SIZEX])
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = Random(SIZEY - 2);								//vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = Random(SIZEX - 2);								//horizontal coordinate in range [1..(SIZEX - 2)]
+	int y(0), x(0);
+	bool done(false);
+
+	do {
+		y = Random(SIZEY - 2);								//vertical coordinate in range [1..(SIZEY - 2)]
+		x = Random(SIZEX - 2);								//horizontal coordinate in range [1..(SIZEX - 2)]
+
+		if (gr[y][x] == TUNNEL)								//if that location is free...
+		{
+			spot.y = y;										//...put spot there
+			spot.x = x;
+			done = true;
+		}
+	} while (!done);
 } //end of setSpotInitialCoordinates
 
 void setHoleInitialCoordinates(vector<Item>& holes, char gr[][SIZEX])
