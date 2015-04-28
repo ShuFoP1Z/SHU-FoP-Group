@@ -149,7 +149,11 @@ void playGame(string playerName)
 		if (isArrowKey(key))
 			updateGame(grid, spot, holes, key, lives, message, pills, pillsRemaining, zombies, frozen);
 		else
-			message = "          INVALID KEY!           ";	//set 'Invalid key' message
+		{
+			if (toupper(key) != FREEZE && toupper(key) != EXTERMINATE && toupper(key) != EAT)
+				message = "          INVALID KEY!           ";	//set 'Invalid key' message
+		}
+			
 		cheats(lives, zombies, pills, key, frozen);			//see if there are cheats
 		if (wantToQuit(key))								//if player wants to quit
 			running = false;
