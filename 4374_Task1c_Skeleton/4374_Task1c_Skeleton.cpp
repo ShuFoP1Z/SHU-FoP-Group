@@ -891,7 +891,6 @@ void writeToSaveFile(string name, int lives, int highscore)
 	{
 		if (lives > highscore)
 			toFile << lives;
-		toFile << lives;
 	}
 	toFile.close();
 }//end of writeToSaveFile
