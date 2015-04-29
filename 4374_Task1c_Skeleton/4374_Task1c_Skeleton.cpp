@@ -125,8 +125,8 @@ void playGame(string playerName)
 	const int highscore = getPlayerScore(playerName);					//get the players highest score
 	Item spot = { SPOT };									//Spot's symbol and position (0, 0) 
 	Item hole = { HOLE };									//Hole's symbol and position (0, 0)
-	bool frozen(false);
-	bool exterminate(false);
+	bool frozen(false);										//keeps whether the zombies are forozen
+	bool exterminate(false);								//keeeps whther the exterminate has been used 
 	Item pill = { PILL };									//Pill's symbol and position (0, 0)
 	vector <Item> holes(12, hole);							//Creates a vector of holes, with each element being initialised as hole 
 	vector <Item> pills(5, pill);							//Creates a vector of pills, with each element being initialised as pills
@@ -384,11 +384,11 @@ void updateZombieCoordinates(const char g[][SIZEX], vector<Item>& zombies, Item 
 	int dx(0), dy(0); //The maximum amount the player can move by
 	int displaceX(0), displaceY(0); //Distance in a vector form from the zombie
 
-	if (frozen == false)
+	if (frozen == false)		//if they are not frozen
 	{
-		for (int i = 0; i < zombies.size(); ++i)
+		for (int i = 0; i < zombies.size(); ++i)	// for every zombie
 		{
-			if (zombies[i].isBeingRendered)
+			if (zombies[i].isBeingRendered)		//if they are still on the grid
 			{
 				displaceX = (spot.x - zombies[i].x); //Determine whether a positive dx is needed or a negative
 				displaceY = (spot.y - zombies[i].y); //Determine whether a positive dy is needed or a negative
@@ -609,8 +609,8 @@ void paintGrid(const char g[][SIZEX])
 		{
 			bool insideWall;
 			if (g[row][col] == SPOT)
-				SelectTextColour(clRed);
-			if (g[row][col] == PILL)
+				SelectTextColour(clRed);		//it makes it pretty
+			if (g[row][col] == PILL)			//colours 
 				SelectTextColour(clCyan);
 			if (g[row][col] == ZOMBIE)
 				SelectTextColour(clGreen);
@@ -804,7 +804,7 @@ void endProgram(int lives, int key, vector<Item> zombies, int pillsRemaining, st
 		cout << "            YOU LOST!            ";
 	if (wantToQuit(key))
 		cout << "          PLAYER QUITS!          ";
-	if (outOfZombies(zombies) && outOfPills(pillsRemaining))
+	if (outOfZombies(zombies) && outOfPills(pillsRemaining)) // checks if any zombies or pills remain
 	{
 		cout << "         ALL ZOMBIES DIED!	      ";
 	}
@@ -898,37 +898,36 @@ void cheats(int& lives, vector<Item>& zombies, vector<Item>& pills, int key, boo
 {
 	if (toupper(key) == EAT)
 	{
-		for (int i = 0; i < pills.size(); ++i)
-			pills[i].isBeingRendered = false;
-		pillsRemaining = 0;
+		for (int i = 0; i < pills.size(); ++i)	//goes through every pill
+			pills[i].isBeingRendered = false;	//removes them from the grid
+		pillsRemaining = 0;						// sets pills rrmaining to 0 for outOfPills
 	}
 
 	if (toupper(key) == EXTERMINATE)
 	{
-		if (exterminate == false)
+		if (exterminate == false)				// if the cheat hasnt been used yet
 		{
-			for (int i = 0; i < zombies.size(); ++i)
-				zombies[i].isBeingRendered = false;
-			exterminate = true;
+			for (int i = 0; i < zombies.size(); ++i)	//go through every zombie
+				zombies[i].isBeingRendered = false;		//remove from grid
+			exterminate = true;							//cheat has been used
 		}
-		else
+		else											// if cheat has been used
 		{
-			for (int i = 0; i < zombies.size(); ++i)
+			for (int i = 0; i < zombies.size(); ++i)	//go through all zombies
 			{
-				resetZombiePosition(zombies, i);
-				zombies[i].isBeingRendered = true;
+				resetZombiePosition(zombies, i);		//reset each zombie position 
+				zombies[i].isBeingRendered = true;		//makes all zombies reappear
 			}
-			exterminate = false;
+			exterminate = false;						//cheat is reset to allow extermination again
 		}
-
 	}
 
 	if (toupper(key) == FREEZE)
 	{
 
-		if (frozen == false)
-			frozen = true;
+		if (frozen == false)						//if they are not frozen
+			frozen = true;							//set frozen to true, so zombies dont  move
 		else
-			frozen = false;
+			frozen = false;							//set frozen to false, so zombies can move
 	}
 }
